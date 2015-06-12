@@ -290,6 +290,7 @@ class NodeDisplayComponent {
             case "blank": return <div></div>;
             case "basicExecution": return <BasicExecutionNodeComponent {...node}/>;
             case "stackMemory": return <StackMemoryNodeComponent {...node}/>;
+            case "beeper": return <div>Beeper Node (visuals incomplete)</div>;
             default: throw "Display component not defined for: " + type;
         }
     }

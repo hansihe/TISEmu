@@ -3,7 +3,8 @@ var BB = require('bluebird');
 
 export let nodeTypes = {
     basicExecution: require('./BasicExecutionNode'),
-    stackMemory: require('./StackMemoryNode')
+    stackMemory: require('./StackMemoryNode'),
+    beeper: require('./BeeperNode')
 };
 
 let sides = require('./sideUtils').nodeSidePairs;
