@@ -100,8 +100,36 @@ class SourceEditorComponent extends React.Component {
     }
 }
 
+class BaseNodeComponent extends AppComponent {
+    constructor(props, context) {
+        super(props, context);
+        this.nodeStateDefaults = {};
+    }
 
-class BasicExecutionNodeComponent extends AppComponent {
+    getNodeState() {
+        let running = this.isMachineCreated();
+        let state = {
+            running: running,
+            editable: !running
+        };
+        if (running) {
+            state.state = this.getNodeInstance().state;
+        } else {
+            state.state = this.nodeStateDefaults;
+        }
+        return state;
+    }
+
+    getNodeInstance() {
+        return this.app.manager.getMachine().getNodeInstance(this.props.position);
+    }
+
+    isMachineCreated() {
+        return this.app.manager.isMachineCreated();
+    }
+}
+
+class BasicExecutionNodeComponent extends BaseNodeComponent {
     constructor(props, context) {
         super(props, context);
         this.nodeStateDefaults = {
@@ -132,21 +160,29 @@ class BasicExecutionNodeComponent extends AppComponent {
             </div>
         </div>;
     }
+}
 
-    getNodeState() {
-        let running = this.app.manager.isMachineCreated();
-        let state = {
-            mode: running ? "RUNNING" : "IDLE",
-            editable: !running,
-            running: running
+class StackMemoryNodeComponent extends BaseNodeComponent {
+    constructor(props, context) {
+        super(props, context);
+        this.nodeStateDefaults = {
+            stack: []
         };
+    }
 
-        if (running) {
-            state.state = this.app.manager.getMachine().getNodeInstance(this.props.position).state;
-        } else {
-            state.state = this.nodeStateDefaults;
-        }
-        return state;
+    render() {
+        let state = this.getNodeState();
+        let stackItems = _.map(state.state.stack, item => {
+            return <div>{item}</div>;
+        });
+        return <div className="nodeFrame stackMemoryNode">
+            <div className="leftPanel">
+                STACK MEMORY NODE
+            </div>
+            <div className="rightPanel">
+                {stackItems}
+            </div>
+        </div>;
     }
 }
 
@@ -253,7 +289,7 @@ class NodeDisplayComponent {
         switch (type) {
             case "blank": return <div></div>;
             case "basicExecution": return <BasicExecutionNodeComponent {...node}/>;
-            case "stackMemory": return <div></div>;
+            case "stackMemory": return <StackMemoryNodeComponent {...node}/>;
             default: throw "Display component not defined for: " + type;
         }
     }

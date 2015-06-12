@@ -6,26 +6,9 @@ export let nodeTypes = {
     stackMemory: require('./StackMemoryNode')
 };
 
-// The order of these are actually important. They decide the order in which the ANY opcode with read/write.
-let sides = [
-    ['l', [-1, 0]], // Left
-    ['r', [1, 0]], // Right
-    ['u', [0, -1]], // Up
-    ['d', [0, 1]] // Down
-];
+let sides = require('./sideUtils').nodeSidePairs;
 
-function sumPositions(pos1, pos2) {
-    return _.zipWith(pos1, pos2, _.add);
-}
-
-function opositeSide(sideName) {
-    switch (sideName) {
-        case 'l': return 'r';
-        case 'r': return 'l';
-        case 'u': return 'd';
-        case 'd': return 'u';
-    }
-}
+var { opositeSide, sumPositions } = require('./sideUtils');
 
 class TISMachine {
     constructor(nodeDescMap) {
@@ -34,7 +17,7 @@ class TISMachine {
         this.nodeMap = _.mapValues(this.nodeDescMap, col => {
             return _.mapValues(col, nodeDesc => {
                 let nodeClass = nodeTypes[nodeDesc.type];
-                return new nodeClass(nodeDesc);
+                return new nodeClass(this, nodeDesc);
             });
         });
     }
@@ -47,36 +30,31 @@ class TISMachine {
         });
     }
 
-    async stepRound(nodes) {
-        let responsePromises = _.map(nodes, node => node.prepPass());
-        _.each(nodes, node => node.readPass());
-        _.each(nodes, node => node.writePass());
-        let responses = await BB.all(responsePromises);
+    stepPass(nodes, num) {
+        console.log("PASS", num, ":", nodes.length);
+        if (nodes.length === 0) {
+            return;
+        }
 
+        let responses = _.map(nodes, node => node.doStepPass());
         let nextRoundNodes = _.unzip(_.filter(_.zip(responses, nodes), ([response]) => !response))[1];
 
         if (nextRoundNodes && nextRoundNodes.length !== nodes.length) {
-            this.stepRound(nextRoundNodes);
+            return this.stepPass(nextRoundNodes, num + 1);
+        } else {
+            return nextRoundNodes;
         }
     }
 
-    async step() {
+    step() {
         let nodes = [];
         this.eachNode(node => nodes.push(node));
 
         // Iterate until all conflicts are resolved
-        await this.stepRound(nodes);
+        let res = this.stepPass(nodes, 0);
+        this.stepPass(res, 0); // TODO: This is a really shitty way to do it, but it does make sure all interactions are done.
 
-        // Move writes
-        this.eachNode((node, position) => {
-            _.each(sides, ([sideName, sidePos]) => {
-                let sideNode = this.getNodeInstance(sumPositions(position, sidePos));
-                if (sideNode) {
-                    let readSide = opositeSide(sideName);
-                    node.in[sideName] = sideNode.out[readSide];
-                }
-            });
-        });
+        this.eachNode(node => node.doStepEnd());
     }
 
     getNodeInstance([xPos, yPos]) {

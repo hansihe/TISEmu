@@ -6,9 +6,8 @@ let opHandlers = {
     NOP([]) {
         this.incrPc();
     },
-    async MOV([src, dest], writePass) {
+    MOV([src, dest]) {
         let value = this.getOperand(src);
-        await writePass;
 
         // If we interacted with a i/o port, we can't increment pc
         // until the i/o operation is done.
@@ -80,8 +79,8 @@ let opHandlers = {
 
 
 class BasicExecutionNode extends BaseNode {
-    constructor(source) {
-        super(source);
+    constructor(machine, source) {
+        super(machine, source);
 
         this.ast = parse(source.code);
 
@@ -178,7 +177,9 @@ class BasicExecutionNode extends BaseNode {
         this.setPc(this.resolveLabel(label));
     }
 
-    async step(readPass, writePass) {
+    pass() {
+        this.waitWrite();
+
         if (this.stepIncrOp) {
             this.stepIncrOp = false;
             this.incrPc();
@@ -188,8 +189,9 @@ class BasicExecutionNode extends BaseNode {
         let [opCode, operands] = this.ast.instructions[this.state.pc];
         let handler = opHandlers[opCode];
 
-        await readPass;
-        await handler.call(this, operands, writePass);
+        handler.call(this, operands);
+
+        return true;
     }
 }
 BasicExecutionNode.nodeType = "basicExecution";

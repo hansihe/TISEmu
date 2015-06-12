@@ -96,12 +96,28 @@ $portSize: 40px;
                         height: $frameSize;
                         border: 3px double white;
 
+                        .leftPanel {
+                            float: left;
+                            height: $innerFrameSize;
+                            width: $innerFrameSize - $sideFragmentSize;
+                        }
+                        .rightPanel {
+                            float: left;
+                            height: $innerFrameSize;
+                            width: $sideFragmentSize;
+                            border-left: 3px double white;
+                        }
+
+                        &.stackMemoryNode {
+                            .rightPanel {
+                                div:last-child {
+                                    background-color: red;
+                                }
+                            }
+                        }
+
                         &.basicExecNode {
                             .leftPanel {
-                                float: left;
-                                height: $innerFrameSize;
-                                width: $innerFrameSize - $sideFragmentSize;
-
                                 .inArea {
                                     resize: none;
                                     width: 100%;
@@ -124,11 +140,6 @@ $portSize: 40px;
                                 }
                             }
                             .rightPanel {
-                                float: left;
-                                height: $innerFrameSize;
-                                width: $sideFragmentSize;
-                                border-left: 3px double white;
-
                                 .fragment {
                                     width: 100%;
                                     height: $sideFragmentSize;
