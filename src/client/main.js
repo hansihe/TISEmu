@@ -1,9 +1,11 @@
 var BasicExecutionNode = require('./BasicExecutionNode');
-var TISMachineManager = require('./TISMachine');
+var TISMachineManager = require('./TISMachine').default;
+var nodeTypes = require('./TISMachine').nodeTypes;
 
 var React = require('react');
 var CodeMirror = require('codemirror');
 var Marty = require('marty');
+var AppComponent = require('./component/AppBaseComponent');
 
 
 
@@ -39,18 +41,6 @@ function findDimentions(nodes) {
         }
     };
 }
-
-class AppComponent extends React.Component {
-    constructor(props, context) {
-        super(props, context);
-        this.app = context.app;
-    }
-}
-AppComponent.contextTypes = {
-    app: React.PropTypes.object.isRequired
-};
-
-
 
 class SourceEditorComponent extends React.Component {
     constructor(props, context) {
@@ -111,7 +101,7 @@ class SourceEditorComponent extends React.Component {
 }
 
 
-class BaseNodeComponent extends AppComponent {
+class BasicExecutionNodeComponent extends AppComponent {
     constructor(props, context) {
         super(props, context);
         this.nodeStateDefaults = {
@@ -124,12 +114,8 @@ class BaseNodeComponent extends AppComponent {
     }
 
     render() {
-        if (this.props.node === null) {
-            return <div></div>;
-        }
-
         let manager = this.app.manager;
-        let nodeDesc = manager.getNodeDescriptor(this.props.node.position);
+        let nodeDesc = manager.getNodeDescriptor(this.props.position);
 
         let state = this.getNodeState();
         let lastPort = (state.state.lastPort === -1) ? "N/A" : state.state.lastPort;
@@ -156,7 +142,7 @@ class BaseNodeComponent extends AppComponent {
         };
 
         if (running) {
-            state.state = this.app.manager.getMachine().getNodeInstance(this.props.node.desc.position).state;
+            state.state = this.app.manager.getMachine().getNodeInstance(this.props.position).state;
         } else {
             state.state = this.nodeStateDefaults;
         }
@@ -211,9 +197,9 @@ class PortComponent extends AppComponent {
 
     addNode() {
         if (this.getNodeOneDesc()) {
-            this.app.managerStore.addNode(this.getNodeTwoPos(), 'basicExecution');
+            this.app.modalStore.displayNodeAddDialog(this.getNodeTwoPos());
         } else {
-            this.app.managerStore.addNode(this.getNodeOnePos(), 'basicExecution');
+            this.app.modalStore.displayNodeAddDialog(this.getNodeOnePos());
         }
     }
 
@@ -259,44 +245,60 @@ class PortComponent extends AppComponent {
     }
 }
 
-function componentFor(type) {
-    switch (type) {
-        case "blank": {
-            return "div";
-        }
-        case "basicExecution": {
-            return BaseNodeComponent;
+class NodeDisplayComponent {
+    render() {
+        let node = this.props.node;
+        let { type } = node;
+
+        switch (type) {
+            case "blank": return <div></div>;
+            case "basicExecution": return <BasicExecutionNodeComponent {...node}/>;
+            case "stackMemory": return <div></div>;
+            default: throw "Display component not defined for: " + type;
         }
     }
 }
+
+var ModalRenderComponent = require('./component/ModalRender');
 
 class RootComponent extends AppComponent {
     constructor(props, context) {
         super(props, context);
     }
 
+    render() {
+        let grid = this.makeTableContent();
+        
+        return <div className="appContainer">
+            <ModalRenderComponent/>
+            <MachineControlsComponent/>
+            <div className="tableContainer">
+                {grid}
+            </div>
+        </div>;
+    }
+
     portCol(position) {
-        return <div key={position[0]} className="nodeVertPort">
+        return <div key={"portCol_" + position[0]} className="nodeVertPort">
             <PortComponent orientation="v" position={position}/>
         </div>;
     }
     portRow(yPos, xStart, xEnd) {
-        return <div key={yPos} className="nodeHorizPortRow">
+        return <div key={"portRow_" + yPos} className="nodeHorizPortRow">
             {_.map(_.range(xStart, xEnd + 1), xPos => {
                 return [
-                    <div key={xPos + 'l'} className="nodeCorner"></div>,
+                    <div key={"corner_" + xPos} className="nodeCorner"></div>,
                     <div key={xPos} className="nodeHorizPort">
                         <PortComponent orientation="h" position={[xPos, yPos]}/>
                     </div>
                 ];
             })}
-            <div key="ll" className="nodeCorner"></div>
+            <div key="corner_last" className="nodeCorner"></div>
         </div>;
     }
 
-    render() {
+    makeTableContent() {
         let [tableStruct, xMin, xMax, yMin, yMax] = this.makeTableStruct(this.app.manager.nodeMap);
-        console.log(tableStruct);
 
         let lastNode;
         let gridX = _.map(_.range(yMin, yMax + 1), (yIndex) => {
@@ -304,12 +306,12 @@ class RootComponent extends AppComponent {
             let gridY = _.map(_.range(xMin, xMax + 1), (xIndex) => {
                 let node = xNodes[xIndex];
                 lastNode = node;
-                let nodeComponent = componentFor(node.type);
+
                 let portCol = this.portCol(node.position);
                 return [
-                    {portCol},
-                    <div key={yIndex} className="nodeCol">
-                        {React.createElement(nodeComponent, {node: node})}
+                    portCol,
+                    <div key={xIndex} className="nodeCol">
+                        <NodeDisplayComponent node={node}/>
                     </div>
                 ];
             });
@@ -317,7 +319,7 @@ class RootComponent extends AppComponent {
             let portRow = this.portRow(yIndex, xMin, xMax);
             let portCol = this.portCol([lastNode.position[0] + 1, lastNode.position[1]]);
             return [
-                {portRow},
+                portRow,
                 <div key={yIndex} className="nodeRow">
                     {gridY}
                     {portCol}
@@ -331,12 +333,7 @@ class RootComponent extends AppComponent {
             {portRow}
         </div>;
 
-        return <div>
-            <MachineControlsComponent/>
-            <div className="tableContainer">
-                {grid}
-            </div>
-        </div>;
+        return grid;
     }
 
     makeTableStruct(nodes) {
@@ -350,16 +347,6 @@ class RootComponent extends AppComponent {
                     transposed[yPos] = {};
                 }
                 transposed[yPos][xPos] = node;
-            });
-        });
-
-        // Add data
-        let tableNodes = _.mapValues(transposed, nodeRow => {
-            return _.mapValues(nodeRow, node => {
-                return {
-                    type: 'basicExecution',
-                    desc: node
-                };
             });
         });
 
@@ -382,7 +369,7 @@ class RootComponent extends AppComponent {
                     }];
                 }
                 return [xPos, {
-                    type: 'basicExecution',
+                    type: col[xPos].type,
                     desc: col[xPos],
                     position: [xPos, yPos]
                 }];
@@ -446,12 +433,43 @@ class MachineManagerStore extends Marty.Store {
     }
 }
 
+class ModalStore extends Marty.Store {
+    constructor(options) {
+        super(options);
+        this.modalTypes = {
+            nodeAddDialog: "nodeAddDialog"
+        };
+        this.state = {
+            current: null
+        };
+    }
+
+    displayNodeAddDialog(pos) {
+        this.displayModal(this.modalTypes.nodeAddDialog, pos);
+    }
+
+    displayModal(type, ...args) {
+        this.setState({
+            current: [type, args]
+        });
+    }
+    closeModal() {
+        this.setState({
+            current: null
+        });
+    }
+    getModal() {
+        return this.state.current;
+    }
+}
+
 class Application extends Marty.Application {
     constructor(options) {
         super(options);
 
         this.manager = new TISMachineManager();
         this.register('managerStore', MachineManagerStore);
+        this.register('modalStore', ModalStore);
 
         this.manager.fromSource({
             nodes: [

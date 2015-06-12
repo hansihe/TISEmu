@@ -1,12 +1,9 @@
 var _ = require('lodash');
 var BB = require('bluebird');
-var parse = require('./parser');
 
-var BasicExecutionNode = require('./BasicExecutionNode');
-
-
-let nodeTypes = {
-    basicExecution: BasicExecutionNode
+export let nodeTypes = {
+    basicExecution: require('./BasicExecutionNode'),
+    stackMemory: require('./StackMemoryNode')
 };
 
 // The order of these are actually important. They decide the order in which the ANY opcode with read/write.
@@ -37,8 +34,7 @@ class TISMachine {
         this.nodeMap = _.mapValues(this.nodeDescMap, col => {
             return _.mapValues(col, nodeDesc => {
                 let nodeClass = nodeTypes[nodeDesc.type];
-                let nodeAst = parse(nodeDesc.code);
-                return new nodeClass(nodeAst, nodeDesc);
+                return new nodeClass(nodeDesc);
             });
         });
     }
@@ -56,6 +52,7 @@ class TISMachine {
         _.each(nodes, node => node.readPass());
         _.each(nodes, node => node.writePass());
         let responses = await BB.all(responsePromises);
+
         let nextRoundNodes = _.unzip(_.filter(_.zip(responses, nodes), ([response]) => !response))[1];
 
         if (nextRoundNodes && nextRoundNodes.length !== nodes.length) {
@@ -64,30 +61,18 @@ class TISMachine {
     }
 
     async step() {
-        /*        this.stepRound(nodes);
-
-        let nodeResp = [];
-        this.eachNode(node => {
-            nodeResp.push([node, node.prepPass()]);
-        });
-        let [nodes, responsePromises] = _.unzip(nodeResp);
-
-        _.each(nodes, node => node.readPass());
-        _.each(nodes, node => node.writePass());
-
-        let responses = await BB.all(responsePromises);
-
-        let nextPass = _.unzip(_.filter(_.zip(nodes, responses), ([node, response]) => !response))[0];*/
         let nodes = [];
         this.eachNode(node => nodes.push(node));
+
+        // Iterate until all conflicts are resolved
         await this.stepRound(nodes);
 
+        // Move writes
         this.eachNode((node, position) => {
             _.each(sides, ([sideName, sidePos]) => {
                 let sideNode = this.getNodeInstance(sumPositions(position, sidePos));
                 if (sideNode) {
                     let readSide = opositeSide(sideName);
-                    console.log("Write", position, sideName, sideNode.out[readSide])
                     node.in[sideName] = sideNode.out[readSide];
                 }
             });

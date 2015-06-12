@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var BaseNode = require('./BaseNode');
+var parse = require('./parser');
 
 let opHandlers = {
     NOP([]) {
@@ -79,10 +80,10 @@ let opHandlers = {
 
 
 class BasicExecutionNode extends BaseNode {
-    constructor(ast, source) {
+    constructor(source) {
         super(source);
 
-        this.ast = ast;
+        this.ast = parse(source.code);
 
         this.state = {
             pc: 0,
@@ -192,5 +193,6 @@ class BasicExecutionNode extends BaseNode {
     }
 }
 BasicExecutionNode.nodeType = "basicExecution";
+BasicExecutionNode.displayName = "Basic Execution Node";
 
 export default BasicExecutionNode;

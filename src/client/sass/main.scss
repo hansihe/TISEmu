@@ -1,18 +1,23 @@
 @import "codemirror";
 
 * {
-  box-sizing: border-box;
-  font-family: monospace;
-  color: white;
+    box-sizing: border-box;
 }
 
 html, body {
     padding: 0;
     margin: 0;
+
+    font-family: monospace;
+    color: white;
+
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 body {
-  background-color: black;
+    background-color: black;
 }
 
 $frameSize: 250px;
@@ -20,116 +25,154 @@ $innerFrameSize: $frameSize - 6px;
 $sideFragmentSize: $innerFrameSize / 4;
 $portSize: 40px;
 
-.tableContainer {
-    .nodeTable {
+.appContainer {
+    width: 100%;
+    height: 100%;
+    .tableContainer {
+        height: 90%;
+        width: 100%;
         overflow: scroll;
-        .nodeHorizPort, .nodeVertPort {
-            .addButton {
-                text-align: center;
-                display: inline-block;
-            }
-        }
-        .nodeHorizPortRow {
-            height: $portSize;
-            white-space: nowrap;
 
-            .nodeHorizPort {
-                vertical-align: top;
-                width: $frameSize;
-                height: $portSize;
-
-                display: inline-block;
-
+        .nodeTable {
+            .nodeHorizPort, .nodeVertPort {
                 .addButton {
+                    text-align: center;
+                    display: inline-block;
+                }
+            }
+            .nodeHorizPortRow {
+                height: $portSize;
+                white-space: nowrap;
+
+                .nodeHorizPort {
+                    vertical-align: top;
                     width: $frameSize;
                     height: $portSize;
-                    line-height: $portSize;
+
+                    display: inline-block;
+
+                    .addButton {
+                        width: $frameSize;
+                        height: $portSize;
+                        line-height: $portSize;
+                    }
+                }
+                .nodeCorner {
+                    vertical-align: top;
+                    width: $portSize;
+                    height: $portSize;
+
+                    display: inline-block;
                 }
             }
-            .nodeCorner {
-                vertical-align: top;
-                width: $portSize;
-                height: $portSize;
-
-                display: inline-block;
-            }
-        }
-        .nodeRow {
-            height: $frameSize;
-            white-space: nowrap;
-
-            .nodeVertPort {
-                vertical-align: top;
-                width: $portSize;
+            .nodeRow {
                 height: $frameSize;
+                white-space: nowrap;
 
-                display: inline-block;
-
-                .addButton {
+                .nodeVertPort {
+                    vertical-align: top;
                     width: $portSize;
                     height: $frameSize;
-                    line-height: $frameSize;
+
+                    display: inline-block;
+
+                    .addButton {
+                        width: $portSize;
+                        height: $frameSize;
+                        line-height: $frameSize;
+                    }
                 }
-            }
-            .nodeCol {
-                vertical-align: top;
-                width: $frameSize;
-                height: $frameSize;
+                .nodeCol {
+                    vertical-align: top;
+                    width: $frameSize;
+                    height: $frameSize;
 
-                display: inline-block;
+                    display: inline-block;
 
-                border: 1px solid #111;
+                    border: 1px solid #111;
+
+                    .nodeFrame {
+                        width: $frameSize;
+                        height: $frameSize;
+                        border: 3px double white;
+
+                        &.basicExecNode {
+                            .leftPanel {
+                                float: left;
+                                height: $innerFrameSize;
+                                width: $innerFrameSize - $sideFragmentSize;
+
+                                .inArea {
+                                    resize: none;
+                                    width: 100%;
+                                    height: 100%;
+                                    background-color: black;
+                                }
+                                .CodeMirror {
+                                    width: 100%;
+                                    height: 100%;
+                                    background-color: black;
+                                    color: white;
+
+                                    div.CodeMirror-cursor {
+                                        border-left: 1px solid white;
+                                    }
+
+                                    .pcLine {
+                                        background-color: red;
+                                    }
+                                }
+                            }
+                            .rightPanel {
+                                float: left;
+                                height: $innerFrameSize;
+                                width: $sideFragmentSize;
+                                border-left: 3px double white;
+
+                                .fragment {
+                                    width: 100%;
+                                    height: $sideFragmentSize;
+                                    border-bottom: 3px double white;
+                                    text-align: center;
+                                    &:last-child {
+                                        border-bottom: 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-.nodeFrame {
-  width: $frameSize;
-  height: $frameSize;
-  border: 3px double white;
-  
-  &.basicExecNode {
-    .leftPanel {
-      float: left;
-      height: $innerFrameSize;
-      width: $innerFrameSize - $sideFragmentSize;
-      
-      .inArea {
-        resize: none;
-        width: 100%;
-        height: 100%;
-        background-color: black;
-      }
-      .CodeMirror {
-        width: 100%;
-        height: 100%;
-        background-color: black;
-        
-        div.CodeMirror-cursor {
-          border-left: 1px solid white;
-        }
-        
-        .pcLine {
-          background-color: red;
-        }
-      }
-    }
-    .rightPanel {
-      float: left;
-      height: $innerFrameSize;
-      width: $sideFragmentSize;
-      border-left: 3px double white;
 
-      .fragment {
-        width: 100%;
-        height: $sideFragmentSize;
-        border-bottom: 3px double white;
-        text-align: center;
-        &:last-child {
-          border-bottom: 0;
-        }
-      }
+
+.modalContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background-color: rgba(0.5, 0.5, 0.5, 0.5);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .type {
+        background-color: white;
+        color: black;
+        padding: 6px;
     }
-  }
+
+    .nodeAddDialogType {
+        max-width: 300px;
+        a {
+            display: block;
+        }
+    }
+
 }
