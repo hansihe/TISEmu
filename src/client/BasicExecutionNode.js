@@ -123,8 +123,23 @@ class BasicExecutionNode extends BaseNode {
                     return this.read('d');
                 }
                 case "ANY": {
-                    // TODO: Reverse implementation
-                    throw "unimplemented";
+                    let l;
+                    try { l = this.read('l'); } catch (e) {}
+                    if (l !== undefined) return l;
+
+                    let r;
+                    try { r = this.read('r'); } catch (e) {}
+                    if (r !== undefined) return r;
+
+                    let u;
+                    try { u = this.read('u'); } catch (e) {}
+                    if (u !== undefined) return u;
+
+                    let d;
+                    try { d = this.read('d'); } catch (e) {}
+                    if (d !== undefined) return d;
+
+                    throw this.WAIT_READ;
                 }
                 case "LAST": {
                     // TODO: Reverse implementation
@@ -161,7 +176,10 @@ class BasicExecutionNode extends BaseNode {
                 this.write('d', value);
                 return true;
             }
-            case "ANY": return true;
+            case "ANY": {
+                this.write('a', value);
+                return true;
+            }
             case "LAST": return true;
         }
     }

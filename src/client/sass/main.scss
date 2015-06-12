@@ -25,38 +25,77 @@ $innerFrameSize: $frameSize - 6px;
 $sideFragmentSize: $innerFrameSize / 4;
 $portSize: 40px;
 
+$topBarHeight: 50px;
+
+
 .appContainer {
     width: 100%;
     height: 100%;
-    .tableContainer {
-        height: 90%;
+    
+    // Stacking context
+    position: relative; 
+    z-index: 0;
+
+    // .modalContainer
+
+    .topBar {
+        z-index: 5;
+
         width: 100%;
-        overflow: scroll;
+        height: $topBarHeight;
+        border-bottom: 1px solid #333333;
+
+        $buttonHeight: $topBarHeight - 1px;
+        $buttonLineHeight: $topBarHeight - 6px;
+
+        .heading {
+            height: $buttonHeight;
+            line-height: $buttonHeight;
+
+            display: inline-block;
+            vertical-align: top;
+
+            padding: 0 10px;
+            margin-right: 20px;
+            font-size: 1.5em;
+        }
+
+        a {
+            height: $buttonHeight;
+            line-height: $buttonLineHeight;
+
+            display: inline-block;
+            vertical-align: top;
+
+            border: 3px double white;
+            padding: 0 15px;
+            margin: 0 5px;;
+
+            color: white;
+        }
+    }
+
+    .tableContainer {
+        z-index: -10;
+
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding-top: $topBarHeight;
 
         .nodeTable {
-            .nodeHorizPort, .nodeVertPort {
-                .addButton {
-                    text-align: center;
-                    display: inline-block;
-                }
-            }
+            width: 100%;
+            height: 100%;
+            overflow: scroll;
+
             .nodeHorizPortRow {
                 height: $portSize;
                 white-space: nowrap;
 
-                .nodeHorizPort {
-                    vertical-align: top;
-                    width: $frameSize;
-                    height: $portSize;
+                // .nodePort
 
-                    display: inline-block;
-
-                    .addButton {
-                        width: $frameSize;
-                        height: $portSize;
-                        line-height: $portSize;
-                    }
-                }
                 .nodeCorner {
                     vertical-align: top;
                     width: $portSize;
@@ -69,19 +108,8 @@ $portSize: 40px;
                 height: $frameSize;
                 white-space: nowrap;
 
-                .nodeVertPort {
-                    vertical-align: top;
-                    width: $portSize;
-                    height: $frameSize;
+                // .nodePort
 
-                    display: inline-block;
-
-                    .addButton {
-                        width: $portSize;
-                        height: $frameSize;
-                        line-height: $frameSize;
-                    }
-                }
                 .nodeCol {
                     vertical-align: top;
                     width: $frameSize;
@@ -91,82 +119,146 @@ $portSize: 40px;
 
                     border: 1px solid #111;
 
-                    .nodeFrame {
-                        width: $frameSize;
-                        height: $frameSize;
-                        border: 3px double white;
-
-                        .leftPanel {
-                            float: left;
-                            height: $innerFrameSize;
-                            width: $innerFrameSize - $sideFragmentSize;
-                        }
-                        .rightPanel {
-                            float: left;
-                            height: $innerFrameSize;
-                            width: $sideFragmentSize;
-                            border-left: 3px double white;
-                        }
-
-                        &.stackMemoryNode {
-                            .rightPanel {
-                                div:last-child {
-                                    background-color: red;
-                                }
-                            }
-                        }
-
-                        &.basicExecNode {
-                            .leftPanel {
-                                .inArea {
-                                    resize: none;
-                                    width: 100%;
-                                    height: 100%;
-                                    background-color: black;
-                                }
-                                .CodeMirror {
-                                    width: 100%;
-                                    height: 100%;
-                                    background-color: black;
-                                    color: white;
-
-                                    div.CodeMirror-cursor {
-                                        border-left: 1px solid white;
-                                    }
-
-                                    .pcLine {
-                                        background-color: red;
-                                    }
-                                }
-                            }
-                            .rightPanel {
-                                .fragment {
-                                    width: 100%;
-                                    height: $sideFragmentSize;
-                                    border-bottom: 3px double white;
-                                    text-align: center;
-                                    &:last-child {
-                                        border-bottom: 0;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // .nodeFrame
                 }
             }
         }
     }
 }
 
+.nodePort {
+    vertical-align: top;
+    display: inline-block;
 
+    &.nodeHorizPort {
+        width: $frameSize;
+        height: $portSize;
+
+        .addButton {
+            width: $frameSize;
+            height: $portSize;
+            line-height: $portSize;
+        }
+        .portDisplay {
+            flex-direction: row;
+        }
+    }
+    &.nodeVertPort {
+        width: $portSize;
+        height: $frameSize;
+
+        .addButton {
+            width: $portSize;
+            height: $frameSize;
+            line-height: $frameSize;
+        }
+        .portDisplay {
+            flex-direction: column;
+        }
+    }
+
+    .addButton {
+        text-align: center;
+        display: inline-block;
+    }
+    .portDisplay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.nodeFrame {
+    width: $frameSize;
+    height: $frameSize;
+    border: 3px double white;
+
+    .leftPanel {
+        float: left;
+        height: $innerFrameSize;
+        width: $innerFrameSize - $sideFragmentSize;
+    }
+    .rightPanel {
+        float: left;
+        height: $innerFrameSize;
+        width: $sideFragmentSize;
+        border-left: 3px double white;
+    }
+
+    &.visualNode {
+        .canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+    }
+
+    &.beeperNode {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &.stackMemoryNode {
+        .leftPanel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rightPanel {
+            div:last-child {
+                background-color: red;
+            }
+        }
+    }
+
+    &.basicExecNode {
+        .leftPanel {
+            .inArea {
+                resize: none;
+                width: 100%;
+                height: 100%;
+                background-color: black;
+            }
+            .CodeMirror {
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                color: white;
+
+                div.CodeMirror-cursor {
+                    border-left: 1px solid white;
+                }
+
+                .pcLine {
+                    background-color: red;
+                }
+            }
+        }
+        .rightPanel {
+            .fragment {
+                width: 100%;
+                height: $sideFragmentSize;
+                border-bottom: 3px double white;
+                text-align: center;
+                &:last-child {
+                    border-bottom: 0;
+                }
+            }
+        }
+    }
+}
 
 .modalContainer {
+    z-index: 10;
+
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 10;
     background-color: rgba(0.5, 0.5, 0.5, 0.5);
 
     display: flex;

@@ -1,6 +1,7 @@
 var gulp = require('gulp');
 var sourceMaps = require('gulp-sourcemaps');
 var babel = require('gulp-babel');
+var uglify = require('gulp-uglify');
 var config = require('../config');
 
 gulp.task('transforms', function() {

@@ -37,6 +37,12 @@ class BaseNode {
     }
 
     readFrom(side) {
+        let value = this.out['a'];
+        if (value !== undefined) {
+            delete this.out['a'];
+            return value;
+        }
+
         let value = this.out[side];
         delete this.out[side];
         return value;

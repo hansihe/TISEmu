@@ -30,7 +30,9 @@ module.exports = {
         },
         output: {
             filename: './main.js'
-        }
+        },
+        plugins: [
+        ]
     },
     transform: {
         src: src + "/**/*.js",

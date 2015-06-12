@@ -4,6 +4,7 @@ var BB = require('bluebird');
 export let nodeTypes = {
     basicExecution: require('./BasicExecutionNode'),
     stackMemory: require('./StackMemoryNode'),
+    visual: require('./VisualNode'),
     beeper: require('./BeeperNode')
 };
 
@@ -32,10 +33,10 @@ class TISMachine {
     }
 
     stepPass(nodes, num) {
-        console.log("PASS", num, ":", nodes.length);
-        if (nodes.length === 0) {
-            return;
+        if (!nodes || nodes.length === 0) {
+            return [];
         }
+        console.log("PASS", num, ":", nodes.length);
 
         let responses = _.map(nodes, node => node.doStepPass());
         let nextRoundNodes = _.unzip(_.filter(_.zip(responses, nodes), ([response]) => !response))[1];
