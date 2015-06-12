@@ -43,7 +43,7 @@ class BaseNode {
             return value;
         }
 
-        let value = this.out[side];
+        value = this.out[side];
         delete this.out[side];
         return value;
     }

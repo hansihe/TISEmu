@@ -54,7 +54,8 @@ class TISMachine {
 
         // Iterate until all conflicts are resolved
         let res = this.stepPass(nodes, 0);
-        this.stepPass(res, 0); // TODO: This is a really shitty way to do it, but it does make sure all interactions are done.
+        //this.stepPass(res, 0); // TODO: This is a really shitty way to do it, but it does make sure all interactions are done.
+        //this.eachNode(node => node.doStepPass());
 
         this.eachNode(node => node.doStepEnd());
     }
