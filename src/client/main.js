@@ -254,6 +254,14 @@ class MachineManagerStore extends Marty.Store {
         this.app.manager.delNode(position);
         this.hasChanged();
     }
+
+    fromSource(source) {
+        this.app.manager.fromSource(source);
+        this.hasChanged();
+    }
+    toSource() {
+        return this.app.manager.toSource();
+    }
 }
 
 class ModalStore extends Marty.Store {
@@ -308,6 +316,7 @@ class Application extends Marty.Application {
 
 window.onload = function() {
     var app = new Application();
+    window.app = app;
 
     React.render(
             <Marty.ApplicationContainer app={app}>

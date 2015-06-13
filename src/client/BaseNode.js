@@ -40,6 +40,7 @@ class BaseNode {
         let value = this.out['a'];
         if (value !== undefined) {
             delete this.out['a'];
+            this.state.lastPort = side;
             return value;
         }
 

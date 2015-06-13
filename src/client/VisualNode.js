@@ -22,7 +22,7 @@ class VisualNode extends BaseNode {
             this.state.image[yPos][xPos + num] = color;
         });
 
-        console.log(this.state);
+        this.state.sequence = [];
     }
 
     pass() {

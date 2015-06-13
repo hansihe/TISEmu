@@ -125,25 +125,41 @@ class BasicExecutionNode extends BaseNode {
                 case "ANY": {
                     let l;
                     try { l = this.read('l'); } catch (e) {}
-                    if (l !== undefined) return l;
+                    if (l !== undefined) {
+                        this.state.lastPort = 'l';
+                        return l;
+                    }
 
                     let r;
                     try { r = this.read('r'); } catch (e) {}
-                    if (r !== undefined) return r;
+                    if (r !== undefined) {
+                        this.state.lastPort = 'r';
+                        return r;
+                    }
 
                     let u;
                     try { u = this.read('u'); } catch (e) {}
-                    if (u !== undefined) return u;
+                    if (u !== undefined) {
+                        this.state.lastPort = 'u';
+                        return u;
+                    }
 
                     let d;
                     try { d = this.read('d'); } catch (e) {}
-                    if (d !== undefined) return d;
+                    if (d !== undefined) {
+                        this.state.lastPort = 'd';
+                        return d;
+                    }
 
                     throw this.WAIT_READ;
                 }
                 case "LAST": {
                     // TODO: Reverse implementation
-                    throw "unimplemented";
+                    try {
+                        return this.read(this.state.lastPort);
+                    } catch (e) {
+                        return 0;
+                    }
                 }
                 default: {
                     throw "Could not resolve unknown operand (runtime error, should not happen!!): " + operand;
@@ -202,6 +218,11 @@ class BasicExecutionNode extends BaseNode {
             this.stepIncrOp = false;
             this.incrPc();
             return;
+        }
+
+        while (this.ast.instructions[this.state.pc][0] === "SKIP") {
+            this.state.pc += 1;
+            console.log("SKIP");
         }
 
         let [opCode, operands] = this.ast.instructions[this.state.pc];

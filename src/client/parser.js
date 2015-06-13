@@ -83,7 +83,7 @@ function parseToAst(source) {
       if (operation) {
         return [label, parseOpcode(operation)];
       } else {
-        return [label, ["NOP", []]];
+        return [label, ["SKIP", []]];
       }
     } catch (e) {
       throw "Parse error at line " + line + ": " + e;

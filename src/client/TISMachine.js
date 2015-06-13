@@ -101,7 +101,16 @@ class TISMachineManager {
     }
 
     toSource() {
-        // TODO
+        let nodes = [];
+        _.each(this.nodeMap, (col, xPos) => {
+            _.each(col, (node, yPos) => {
+                nodes.push(node);
+            });
+        });
+
+        return {
+            nodes: nodes
+        };
     }
 
     addNode(position, type, code="") {
