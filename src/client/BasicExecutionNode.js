@@ -13,6 +13,7 @@ let opHandlers = {
         // until the i/o operation is done.
         if (this.setOperand(dest, value)) {
             this.stepIncrOp = true;
+            //this.incrPc();
         } else {
             this.incrPc();
         }
@@ -29,12 +30,12 @@ let opHandlers = {
     },
     ADD([src]) {
         let value = this.getOperand(src);
-        this.state.acc += value;
+        this.setAcc(this.state.acc + value);
         this.incrPc();
     },
     SUB([src]) {
         let value = this.getOperand(src);
-        this.state.acc -= value;
+        this.setAcc(this.state.acc - value);
         this.incrPc();
     },
     NEG([]) {
@@ -73,7 +74,7 @@ let opHandlers = {
     },
     JRO([src]) {
         let value = this.getOperand(src);
-        this.setPc(value);
+        this.setPc(this.state.pc + value);
     }
 };
 
@@ -87,14 +88,15 @@ class BasicExecutionNode extends BaseNode {
         // If the node doesn't actually do anything, there is no point in doing anything
         this.hasInstructions = false;
         _.each(this.ast.instructions, instruction => {
-            if (instruction !== "SKIP") this.hasInstructions = true;
+            if (instruction[0] !== "SKIP") this.hasInstructions = true;
         });
 
         this.state = {
             pc: 0,
             acc: 0,
             bak: 0,
-            lastPort: -1
+            lastPort: -1,
+            mode: this.hasInstructions ? this.modes.RUN : this.modes.IDLE
         };
 
         this.checkPc();
@@ -107,6 +109,10 @@ class BasicExecutionNode extends BaseNode {
     setPc(value) {
         this.state.pc = value;
         this.checkPc();
+    }
+
+    setAcc(value) {
+        this.state.acc = this.clamp(value);
     }
 
     checkPc() {
@@ -153,19 +159,19 @@ class BasicExecutionNode extends BaseNode {
                         return l;
                     }
 
-                    let r = this.read('r');
+                    let r = this.softRead('r');
                     if (r !== undefined) {
                         this.state.lastPort = 'r';
                         return r;
                     }
 
-                    let u = this.read('u');
+                    let u = this.softRead('u');
                     if (u !== undefined) {
                         this.state.lastPort = 'u';
                         return u;
                     }
 
-                    let d = this.read('d');
+                    let d = this.softRead('d');
                     if (d !== undefined) {
                         this.state.lastPort = 'd';
                         return d;
@@ -175,21 +181,19 @@ class BasicExecutionNode extends BaseNode {
                 }
                 case "LAST": {
                     // TODO: Reverse implementation
-                    try {
-                        return this.read(this.state.lastPort);
-                    } catch (e) {
-                        return 0;
-                    }
+                    if (this.state.lastPort === -1) return 0;
+                    return this.read(this.state.lastPort);
                 }
                 default: {
                     throw "Could not resolve unknown operand (runtime error, should not happen!!): " + operand;
                 }
             }
         } else {
-            return operand;
+            return this.clamp(operand);
         }
     }
     setOperand(operand, value) {
+        value = this.clamp(value);
         switch (operand) {
             case "ACC": {
                 this.state.acc = value;
@@ -216,7 +220,11 @@ class BasicExecutionNode extends BaseNode {
                 this.write('a', value);
                 return true;
             }
-            case "LAST": return true;
+            case "LAST": {
+                if (this.state.lastPort === -1) throw "What should I do here?";
+                this.write(this.state.lastPort, value);
+                return true;
+            }
         }
     }
 
@@ -231,6 +239,13 @@ class BasicExecutionNode extends BaseNode {
         this.setPc(this.resolveLabel(label));
     }
 
+    setMode(mode) {
+        // If there are no instructions, we want to be IDLE forever.
+        if (this.hasInstructions) {
+            super.setMode(mode);
+        }
+    }
+
     pass() {
         if (!this.hasInstructions) return true;
 
@@ -239,7 +254,7 @@ class BasicExecutionNode extends BaseNode {
         if (this.stepIncrOp) {
             this.stepIncrOp = false;
             this.incrPc();
-            return;
+            return true;
         }
 
         this.checkPc();
@@ -254,5 +269,10 @@ class BasicExecutionNode extends BaseNode {
 }
 BasicExecutionNode.nodeType = "basicExecution";
 BasicExecutionNode.displayName = "Basic Execution Node";
+BasicExecutionNode.getBaseDescriptor = function() {
+    return {
+        code: ""
+    };
+}; 
 
 export default BasicExecutionNode;

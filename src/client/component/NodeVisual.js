@@ -1,11 +1,12 @@
 var React = require('react');
 var BaseNodeComponent = require('./NodeBase');
 
-let colors = ['black', 'grey', 'grey', 'white', 'red'];
+let colors = ['black', 'grey', 'lightgrey', 'white', 'red'];
 class VisualNodeComponent extends BaseNodeComponent {
     render() {
+        let size = this.getNodeDescriptor().size;
         return <div className="nodeFrame visualNode">
-            <canvas ref="canvas" className="canvas" width={30} height={18}/>
+            <canvas ref="canvas" className="canvas" width={size[0]} height={size[1]}/>
         </div>;
     }
     componentDidUpdate() {

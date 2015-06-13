@@ -36,7 +36,6 @@ class TISMachine {
         if (!nodes || nodes.length === 0) {
             return [];
         }
-        console.log("PASS", num, ":", nodes.length);
 
         let responses = _.map(nodes, node => node.doStepPass());
         let nextRoundNodes = _.unzip(_.filter(_.zip(responses, nodes), ([response]) => !response))[1];
@@ -113,18 +112,26 @@ class TISMachineManager {
         };
     }
 
-    addNode(position, type, code="") {
+    addNode(position, type) {
         if (this.isMachineCreated()) {
             throw "Cannot modify machine while running";
         }
+        let nodeClass = nodeTypes[type];
+
         if (!this.nodeMap[position[0]]) {
             this.nodeMap[position[0]] = {};
         }
-        this.nodeMap[position[0]][position[1]] = {
+
+        let descriptor = {
             position: position,
-            code: code,
             type: type
         };
+        if (nodeClass.getBaseDescriptor) {
+            _.assign(descriptor, nodeClass.getBaseDescriptor());
+        }
+
+        console.log(descriptor);
+        this.nodeMap[position[0]][position[1]] = descriptor;
     }
     delNode(position) {
         if (this.nodeMap[position[0]]) {

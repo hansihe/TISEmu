@@ -14,36 +14,31 @@ class BaseNode {
         this.out = {};
 
         this.modes = {
+            IDLE: "IDLE",
             RUN: "RUN",
             READ: "READ",
             WRITE: "WRITE"
         }
-        this.mode = this.modes.RUN;
+        this.state.mode = this.modes.RUN;
 
         this.WAIT_READ = Symbol();
         this.WAIT_WRITE = Symbol();
     }
 
     read(side) {
-        let sideNode = this.getSideNode(side);
-        if (!sideNode) {
-            throw this.WAIT_READ;
-        }
-        let value = sideNode.readFrom(opositeSide(side));
+        let value = this.softRead(side);
         if (value === undefined) {
             throw this.WAIT_READ;
         }
         return value;
     }
     softRead(side) {
-        try {
-            return this.read(side)
-        } catch (e) {
-            if (e === this.WAIT_READ) {
-                return undefined;
-            }
-            throw e;
+        let sideNode = this.getSideNode(side);
+        if (!sideNode) {
+            return undefined;
         }
+        let value = sideNode.readFrom(opositeSide(side));
+        return value;
     }
 
     readFrom(side) {
@@ -73,13 +68,21 @@ class BaseNode {
         return this.machine.getNodeInstance(sidePos);
     }
 
+    setMode(mode) {
+        this.state.mode = mode;
+    }
+
     doStepPass() {
         try {
-            return this.pass()
+            let res = this.pass();
+            this.setMode(this.modes.RUN);
+            return res;
         } catch (e) {
             if (e === this.WAIT_READ) {
+                this.setMode(this.modes.READ);
                 return false;
             } else if (e === this.WAIT_WRITE) {
+                this.setMode(this.modes.WRITE);
                 return false;
             } else {
                 throw e;
@@ -89,6 +92,12 @@ class BaseNode {
     doStepEnd() {
         _.each(this.outBuffer, (value, side) => this.out[side] = value);
         this.outBuffer = {};
+    }
+
+    clamp(value) {
+        if (value < -999) return -999;
+        if (value > 999) return 999;
+        return value;
     }
 
     // When we need to wait for a read, we should throw this.WAIT_READ

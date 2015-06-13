@@ -24,6 +24,10 @@ class BaseNodeComponent extends AppComponent {
         return this.app.manager.getMachine().getNodeInstance(this.props.position);
     }
 
+    getNodeDescriptor() {
+        return this.props.desc;
+    }
+
     isMachineCreated() {
         return this.app.manager.isMachineCreated();
     }

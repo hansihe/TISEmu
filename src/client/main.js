@@ -47,8 +47,10 @@ class TopBarComponent extends AppComponent {
     render() {
         return <div className="topBar">
             <div className="heading">TISE</div>
-            <a href="#" onClick={this.stop.bind(this)}>Stop</a>
+            <a href="#" onClick={this.run.bind(this)}>Run</a>
+            <a href="#" onClick={this.runFast.bind(this)}>Fast</a>
             <a href="#" onClick={this.step.bind(this)}>Step</a>
+            <a href="#" onClick={this.stop.bind(this)}>Stop</a>
         </div>;
     }
 
@@ -57,6 +59,12 @@ class TopBarComponent extends AppComponent {
     }
     step() {
         this.app.managerStore.step();
+    }
+    run() {
+        this.app.managerStore.run(10, 10);
+    }
+    runFast() {
+        this.app.managerStore.run(10, 200);
     }
 }
 
@@ -207,6 +215,11 @@ var RootComponentContainer = Marty.createContainer(RootComponent, {
     listenTo: 'managerStore'
 });
 
+// [cycleDelay, ticksPerCycle]
+let speeds = [
+    [10, 1],
+    [10, 10],
+];
 
 class MachineManagerStore extends Marty.Store {
     constructor(options) {
@@ -216,7 +229,8 @@ class MachineManagerStore extends Marty.Store {
             RUNNING: "RUNNING"
         };
         this.state = {
-            status: this.statusTypes.IDLE
+            status: this.statusTypes.IDLE,
+            running: false
         };
     }
 
@@ -241,13 +255,34 @@ class MachineManagerStore extends Marty.Store {
         return false;
     }
 
+    _runStep() {
+        if (this.state.running) {
+            for (let i = 0; i < this.state.runSpeed[1]; i++) {
+                this.app.manager.getMachine().step();
+            }
+            this.hasChanged();
+
+            setTimeout(this._runStep.bind(this), this.state.runSpeed[0]);
+        }
+    }
+    run(cycleDelay, ticksPerCycle) {
+        this.state.runSpeed = [cycleDelay, ticksPerCycle];
+
+        if (this.state.running) return;
+        this.step();
+        this.state.running = true;
+
+        this._runStep();
+    }
     step() {
         if (!this.create()) {
             this.app.manager.getMachine().step();
         }
+        this.state.running = false;
         this.hasChanged();
     }
     stop() {
+        this.state.running = false;
         this.destroy();
     }
 
