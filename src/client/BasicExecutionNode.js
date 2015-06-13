@@ -84,25 +84,49 @@ class BasicExecutionNode extends BaseNode {
 
         this.ast = parse(source.code);
 
+        // If the node doesn't actually do anything, there is no point in doing anything
+        this.hasInstructions = false;
+        _.each(this.ast.instructions, instruction => {
+            if (instruction !== "SKIP") this.hasInstructions = true;
+        });
+
         this.state = {
             pc: 0,
             acc: 0,
             bak: 0,
             lastPort: -1
         };
+
+        this.checkPc();
     }
 
-    checkPc() {
-        if (this.state.pc >= this.ast.instructions.length) {
-            this.state.pc = 0;
-        }
-    }
     incrPc() {
         this.state.pc += 1;
         this.checkPc();
     }
     setPc(value) {
         this.state.pc = value;
+        this.checkPc();
+    }
+
+    checkPc() {
+        // Prevent infinite loops. When the PC wraps twice, we want to stop. It should not happen in reality,
+        // but infinite loops are no fun.
+        let wraps = 0;
+        while (wraps < 2) {
+            let instruction = this.ast.instructions[this.state.pc];
+
+            if (this.state.pc >= this.ast.instructions.length) {
+                this.state.pc = 0;
+                wraps += 1;
+                continue;
+            } else if (instruction[0] === "SKIP") {
+                this.state.pc += 1;
+                continue;
+            } else {
+                break;
+            }
+        }
     }
 
     getOperand(operand) {
@@ -123,29 +147,25 @@ class BasicExecutionNode extends BaseNode {
                     return this.read('d');
                 }
                 case "ANY": {
-                    let l;
-                    try { l = this.read('l'); } catch (e) {}
+                    let l = this.softRead('l');
                     if (l !== undefined) {
                         this.state.lastPort = 'l';
                         return l;
                     }
 
-                    let r;
-                    try { r = this.read('r'); } catch (e) {}
+                    let r = this.read('r');
                     if (r !== undefined) {
                         this.state.lastPort = 'r';
                         return r;
                     }
 
-                    let u;
-                    try { u = this.read('u'); } catch (e) {}
+                    let u = this.read('u');
                     if (u !== undefined) {
                         this.state.lastPort = 'u';
                         return u;
                     }
 
-                    let d;
-                    try { d = this.read('d'); } catch (e) {}
+                    let d = this.read('d');
                     if (d !== undefined) {
                         this.state.lastPort = 'd';
                         return d;
@@ -212,6 +232,8 @@ class BasicExecutionNode extends BaseNode {
     }
 
     pass() {
+        if (!this.hasInstructions) return true;
+
         this.waitWrite();
 
         if (this.stepIncrOp) {
@@ -220,10 +242,7 @@ class BasicExecutionNode extends BaseNode {
             return;
         }
 
-        while (this.ast.instructions[this.state.pc][0] === "SKIP") {
-            this.state.pc += 1;
-            console.log("SKIP");
-        }
+        this.checkPc();
 
         let [opCode, operands] = this.ast.instructions[this.state.pc];
         let handler = opHandlers[opCode];

@@ -27,17 +27,13 @@ class VisualNode extends BaseNode {
 
     pass() {
         _.each(nodeSidePairs, ([side]) => {
-            try {
-                let value = this.read(side);
-                if (value < 0) {
-                    this.draw();
-                } else {
-                    this.state.sequence.push(value);
-                }
-            } catch (e) {
-                if (e !== this.WAIT_READ) {
-                    throw e;
-                }
+            let value = this.softRead(side);
+            if (value === undefined) return;
+
+            if (value < 0) {
+                this.draw();
+            } else {
+                this.state.sequence.push(value);
             }
         });
         return false;

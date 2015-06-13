@@ -226,7 +226,9 @@ class MachineManagerStore extends Marty.Store {
             this.setState({
                 status: this.statusTypes.RUNNING
             });
+            return true;
         }
+        return false;
     }
     destroy() {
         if (this.app.manager.isMachineCreated()) {
@@ -234,12 +236,15 @@ class MachineManagerStore extends Marty.Store {
             this.setState({
                 status: this.statusTypes.IDLE
             });
+            return true;
         }
+        return false;
     }
 
     step() {
-        this.create();
-        this.app.manager.getMachine().step();
+        if (!this.create()) {
+            this.app.manager.getMachine().step();
+        }
         this.hasChanged();
     }
     stop() {

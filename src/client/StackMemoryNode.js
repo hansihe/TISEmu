@@ -16,12 +16,9 @@ class StackMemoryNode extends BaseNode {
 
     pass() {
         _.each(nodeSidePairs, ([side]) => {
-            try {
-                this.state.stack.push(this.read(side));
-            } catch (e) {
-                if (e !== this.WAIT_READ) {
-                    throw e;
-                }
+            let value = this.softRead(side);
+            if (value !== undefined) {
+                this.state.stack.push(value);
             }
         });
         return false;

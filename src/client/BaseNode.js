@@ -35,6 +35,16 @@ class BaseNode {
         }
         return value;
     }
+    softRead(side) {
+        try {
+            return this.read(side)
+        } catch (e) {
+            if (e === this.WAIT_READ) {
+                return undefined;
+            }
+            throw e;
+        }
+    }
 
     readFrom(side) {
         let value = this.out['a'];
