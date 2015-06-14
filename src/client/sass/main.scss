@@ -38,13 +38,16 @@ body {
     -ms-interpolation-mode: nearest-neighbor;
 }
 
-$frameSize: 250px;
+$frameSize: 240px;
 $innerFrameSize: $frameSize - 6px;
 $sideFragmentSize: $innerFrameSize / 4;
 $portSize: 40px;
 
 $topBarHeight: 50px;
 
+.CodeMirror pre {
+    font-size: 12px;
+}
 
 .appContainer {
     width: 100%;
