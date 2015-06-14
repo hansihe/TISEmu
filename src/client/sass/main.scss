@@ -278,4 +278,17 @@ $topBarHeight: 50px;
         }
     }
 
+    .saveJsonType {
+        textarea {
+            width: 100%;
+            resize: none;
+        }
+    }
+    .loadJsonType {
+        textArea {
+            width: 100%;
+            resize: none;
+        }
+    }
+
 }

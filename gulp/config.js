@@ -3,7 +3,7 @@ var wwwDest = dest + "/www";
 var src = "./src";
 var webpack = require('webpack');
 
-module.exports = {
+var config = {
     server: {
         port: 8080,
         staticLocation: wwwDest,
@@ -47,3 +47,5 @@ module.exports = {
         dest: wwwDest
     }
 };
+
+module.exports = config;

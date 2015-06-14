@@ -40,7 +40,10 @@ function findDimentions(nodes) {
 }
 
 
-
+var Constants = Marty.createConstants([
+    'FETCH_PROGRAM',
+    'PUBLISH_PROGRAM'
+]);
 
 
 class TopBarComponent extends AppComponent {
@@ -92,7 +95,7 @@ class NodeDisplayComponent {
 var ModalRenderComponent = require('./component/ModalRender');
 var PortComponent = require('./component/NodePort');
 
-class RootComponent extends AppComponent {
+class EmulatorComponent extends AppComponent {
     constructor(props, context) {
         super(props, context);
     }
@@ -100,12 +103,8 @@ class RootComponent extends AppComponent {
     render() {
         let grid = this.makeTableContent();
         
-        return <div className="appContainer">
-            <ModalRenderComponent/>
-            <TopBarComponent/>
-            <div className="tableContainer">
-                {grid}
-            </div>
+        return <div className="tableContainer">
+            {grid}
         </div>;
     }
 
@@ -211,7 +210,7 @@ class RootComponent extends AppComponent {
     }
 }
 
-var RootComponentContainer = Marty.createContainer(RootComponent, {
+var EmulatorComponentContainer = Marty.createContainer(EmulatorComponent, {
     listenTo: 'managerStore'
 });
 
@@ -308,7 +307,9 @@ class ModalStore extends Marty.Store {
     constructor(options) {
         super(options);
         this.modalTypes = {
-            nodeAddDialog: "nodeAddDialog"
+            nodeAddDialog: "nodeAddDialog",
+            saveJson: "saveJson",
+            loadJson: "loadJson"
         };
         this.state = {
             current: null
@@ -317,6 +318,15 @@ class ModalStore extends Marty.Store {
 
     displayNodeAddDialog(pos) {
         this.displayModal(this.modalTypes.nodeAddDialog, pos);
+    }
+
+    displaySaveJsonDialog() {
+        this.displayModal(this.modalTypes.saveJson, JSON.stringify(this.app.managerStore.toSource()));
+    }
+    displayLoadJsonDialog() {
+        this.displayModal(this.modalTypes.loadJson, (text) => {
+            this.app.managerStore.fromSource(JSON.parse(text));
+        });
     }
 
     displayModal(type, ...args) {
@@ -334,13 +344,79 @@ class ModalStore extends Marty.Store {
     }
 }
 
+class ProgramAPI extends Marty.HttpStateSource {
+    constructor(options) {
+        super(options);
+        this.baseUrl = "/api";
+    }
+
+    getProgram(id) {
+        return this.get('/Program/' + id)
+            .then(res => {
+                if (res.ok) {
+                    let json = res.json();
+                    return json.program.source;
+                }
+                throw new Error("Could not get program", res);
+            });
+    }
+
+    publishProgram(source) {
+        return this.post('/Program', { body: source })
+            .then(res => {
+                if (res.ok) {
+                    let json = res.json();
+                    return json.program.id;
+                }
+                throw new Error("Could not add program", res);
+            });
+    }
+}
+
+class ProgramQueries extends Marty.Queries {
+    fetchProgram(id) {
+        this.dispatch(this.app.constants.FETCH_PROGRAM_STARTING, id);
+        return this.app.programAPI.getProgram(id)
+            .then(program => this.dispatch(this.app.constants.FETCH_PROGRAM, id, program))
+            .catch(err => this.dispatch(this.app.constants.FETCH_PROGRAM_FAILED, id));
+    }
+}
+
+class ProgramActions extends Marty.ActionCreators {
+    publishProgram(source) {
+        this.dispatch(this.app.constants.PUBLISH_PROGRAM_STARTING, source);
+        return this.app.programAPI.publishProgram(source)
+            .then(id => this.dispatch(this.app.constants.PUBLISH_PROGRAM, source, id))
+            .catch(err => this.dispatch(this.app.constants.PUBLISH_PROGRAM_FAILED, source, err));
+    }
+}
+
+class ProgramStore extends Marty.Store {
+    constructor(options) {
+        super(options);
+        this.state = {
+            programs: {}
+        };
+        this.handlers = {
+
+        };
+    }
+
+}
+
 class Application extends Marty.Application {
     constructor(options) {
         super(options);
 
+        this.contants = Constants;
         this.manager = new TISMachineManager();
         this.register('managerStore', MachineManagerStore);
         this.register('modalStore', ModalStore);
+
+        this.register('programAPI', ProgramAPI);
+        this.register('programQueries', ProgramQueries);
+        this.register('programActions', ProgramActions);
+        this.register('programStore', ProgramStore);
 
         this.manager.fromSource({
             nodes: [
@@ -354,12 +430,43 @@ class Application extends Marty.Application {
     }
 }
 
+var Router = require('react-router');
+var { Route, DefaultRoute, RouteHandler, HistoryLocation } = Router;
+
+class RootComponent extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+    }
+
+    render() {
+        return <div className="appContainer">
+            <ModalRenderComponent/>
+            <TopBarComponent/>
+            <RouteHandler/>
+        </div>;
+    }
+}
+
+var routes = (
+    <Route handler={RootComponent}>
+        <DefaultRoute handler={EmulatorComponentContainer}/>
+    </Route>
+);
+
 window.onload = function() {
     var app = new Application();
     window.app = app;
 
-    React.render(
-            <Marty.ApplicationContainer app={app}>
-                <RootComponentContainer/>
-            </Marty.ApplicationContainer>, document.body);
+    Router.run(routes, HistoryLocation, (Root) => {
+        React.render((
+            <Marty.ApplicationContainer app={app}> 
+                <Root/>
+            </Marty.ApplicationContainer>
+        ), document.body);
+    });
+
+//    React.render(
+//            <Marty.ApplicationContainer app={app}>
+//                <RootComponentContainer/>
+//            </Marty.ApplicationContainer>, document.body);
 }

@@ -23,7 +23,7 @@ class BasicExecutionNodeComponent extends BaseNodeComponent {
 
         return <div className="nodeFrame basicExecNode">
             <div className="leftPanel">
-                <SourceEditorComponent source={nodeDesc} state={state} pc={state.state.pc}/>
+                <SourceEditorComponent text={nodeDesc.code} source={nodeDesc} state={state} pc={state.state.pc}/>
             </div>
             <div className="rightPanel">
                 <div className="fragment">ACC<br/>{state.state.acc}</div>

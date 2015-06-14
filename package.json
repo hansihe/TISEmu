@@ -25,11 +25,15 @@
   },
   "dependencies": {
     "babel-runtime": "^5.5.6",
+    "bases": "^0.2.1",
     "bluebird": "^2.9.27",
+    "body-parser": "^1.12.4",
     "codemirror": "^5.3.0",
     "express": "^4.12.4",
     "lodash": "^3.9.3",
     "marty": "^0.10.3",
-    "react": "^0.13.3"
+    "react": "^0.13.3",
+    "react-router": "^0.13.3",
+    "thinky": "^2.0.5"
   }
 }

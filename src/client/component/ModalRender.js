@@ -26,12 +26,38 @@ class NodeAddModal extends AppComponent {
     }
 }
 
+class SaveJsonModal extends AppComponent {
+    render() {
+        return <div>
+            <div>Save this text to save your program. It can be pasted back into the load dialog.</div>
+            <textarea readOnly value={this.props.args[0]}/>
+        </div>;
+    }
+}
+
+class LoadJsonModal extends AppComponent {
+    render() {
+        return <div>
+            <div>Paste the text from the save dialog into the text area below to load a program</div>
+            <textarea ref="text"/>
+            <a href="#" onClick={this.doLoad.bind(this)}>Load</a>
+        </div>;
+    }
+
+    doLoad() {
+        this.props.args[0](this.refs.text.getDOMNode().value);
+        this.props.close();
+    }
+}
+
 class ModalRenderComponent extends AppComponent {
     constructor(props, context) {
         super(props, context);
         this.types = this.app.modalStore.modalTypes;
         this.typeComponents = {
-            "nodeAddDialog": NodeAddModal
+            "nodeAddDialog": NodeAddModal,
+            "saveJson": SaveJsonModal,
+            "loadJson": LoadJsonModal
         };
     }
 
