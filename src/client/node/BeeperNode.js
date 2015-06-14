@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var BaseNode = require('./BaseNode');
 
-var { nodeSidePairs } = require('./sideUtils');
+var { nodeSidePairs } = require('../sideUtils');
 
 let ctx = new AudioContext();
 function playOsc(type,freq,vol,dur) {

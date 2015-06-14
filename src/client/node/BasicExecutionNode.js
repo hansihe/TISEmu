@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var BaseNode = require('./BaseNode');
-var parse = require('./parser');
+var parse = require('../parser');
 
 let opHandlers = {
     NOP([]) {

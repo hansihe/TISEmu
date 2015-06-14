@@ -2,10 +2,11 @@ var _ = require('lodash');
 var BB = require('bluebird');
 
 export let nodeTypes = {
-    basicExecution: require('./BasicExecutionNode'),
-    stackMemory: require('./StackMemoryNode'),
-    visual: require('./VisualNode'),
-    beeper: require('./BeeperNode')
+    basicExecution: require('./node/BasicExecutionNode'),
+    stackMemory: require('./node/StackMemoryNode'),
+    visual: require('./node/VisualNode'),
+    numpad: require('./node/NumpadNode'),
+    beeper: require('./node/BeeperNode')
 };
 
 let sides = require('./sideUtils').nodeSidePairs;

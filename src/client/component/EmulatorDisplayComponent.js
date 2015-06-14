@@ -6,6 +6,7 @@ var AppComponent = require('./AppBase');
 var BasicExecutionNodeComponent = require('./NodeBasicExecution');
 var StackMemoryNodeComponent = require('./NodeStackMemory');
 var VisualNodeComponent = require('./NodeVisual');
+var NumpadNodeComponent = require('./NodeNumpad');
 var BeeperNodeComponent = require('./NodeBeeper');
 class NodeDisplayComponent {
     render() {
@@ -17,6 +18,7 @@ class NodeDisplayComponent {
             case "basicExecution": return <BasicExecutionNodeComponent {...node}/>;
             case "stackMemory": return <StackMemoryNodeComponent {...node}/>;
             case "visual": return <VisualNodeComponent {...node}/>;
+            case "numpad": return <NumpadNodeComponent {...node}/>;
             case "beeper": return <BeeperNodeComponent {...node}/>;
             default: throw "Display component not defined for: " + type;
         }

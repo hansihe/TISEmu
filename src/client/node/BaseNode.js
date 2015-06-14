@@ -1,6 +1,6 @@
 //var Promise = require('bluebird');
 
-var { sumPositions, getSide, opositeSide } = require('./sideUtils');
+var { sumPositions, getSide, opositeSide } = require('../sideUtils');
 
 class BaseNode {
     constructor(machine, source) {
@@ -92,6 +92,7 @@ class BaseNode {
     doStepEnd() {
         _.each(this.outBuffer, (value, side) => this.out[side] = value);
         this.outBuffer = {};
+        this.stepEnd();
     }
 
     clamp(value) {
@@ -99,6 +100,8 @@ class BaseNode {
         if (value > 999) return 999;
         return value;
     }
+
+    stepEnd() {}
 
     // When we need to wait for a read, we should throw this.WAIT_READ
     // Writes will always succeed.

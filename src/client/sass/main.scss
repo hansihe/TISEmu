@@ -20,6 +20,15 @@ body {
     background-color: black;
 }
 
+@mixin unselectable() {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 $frameSize: 250px;
 $innerFrameSize: $frameSize - 6px;
 $sideFragmentSize: $innerFrameSize / 4;
@@ -185,6 +194,43 @@ $topBarHeight: 50px;
         height: $innerFrameSize;
         width: $sideFragmentSize;
         border-left: 3px double white;
+    }
+
+    &.numpadNode {
+        $buttonWidth: $innerFrameSize / 3;
+        $buttonHeight: $innerFrameSize / 4;
+        .numpadRow {
+            width: 100%;
+            height: $buttonHeight;
+
+            .button {
+                display: inline-block;
+                width: $buttonWidth;
+                height: 100%;
+
+                $buttonPadding: 4px;
+                $dButtonPadding: $buttonPadding * 2;
+                padding: $buttonPadding;
+
+                &.big {
+                    width: $buttonWidth * 2;
+                    a {
+                        width: ($buttonWidth * 2) - $dButtonPadding;
+                    }
+                }
+                a {
+                    display: table-cell;
+                    vertical-align: middle;
+                    text-align: center;
+                    @include unselectable();
+
+                    border: 3px double grey;
+
+                    width: $buttonWidth - $dButtonPadding;
+                    height: $buttonHeight - $dButtonPadding;
+                }
+            }
+        }
     }
 
     &.visualNode {
