@@ -23,7 +23,11 @@ class BasicExecutionNodeComponent extends BaseNodeComponent {
 
         return <div className="nodeFrame basicExecNode">
             <div className="leftPanel">
-                <SourceEditorComponent text={nodeDesc.code} source={nodeDesc} state={state} pc={state.state.pc}/>
+                <SourceEditorComponent 
+                    editable={state.editable}
+                    text={nodeDesc.code}
+                    textChange={this.setCode.bind(this)}
+                    highlightLine={state.state.pc}/>
             </div>
             <div className="rightPanel">
                 <div className="fragment">ACC<br/>{state.state.acc}</div>
@@ -32,6 +36,10 @@ class BasicExecutionNodeComponent extends BaseNodeComponent {
                 <div className="fragment">MODE<br/>{state.state.mode}</div>
             </div>
         </div>;
+    }
+
+    setCode(source) {
+        this.app.manager.getNodeDescriptor(this.props.position).code = source;
     }
 }
 

@@ -29,6 +29,15 @@ body {
     user-select: none;
 }
 
+@mixin disableInterpolation() {
+    image-rendering: optimizeSpeed;             /* Older versions of FF          */
+    image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+    image-rendering: -webkit-optimize-contrast; /* Safari                        */
+    image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+    image-rendering: pixelated;                 /* Awesome future-browsers       */
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
 $frameSize: 250px;
 $innerFrameSize: $frameSize - 6px;
 $sideFragmentSize: $innerFrameSize / 4;
@@ -237,7 +246,7 @@ $topBarHeight: 50px;
         .canvas {
             width: 100%;
             height: 100%;
-            image-rendering: pixelated;
+            @include disableInterpolation();
         }
     }
 
@@ -262,24 +271,29 @@ $topBarHeight: 50px;
 
     &.basicExecNode {
         .leftPanel {
-            .inArea {
-                resize: none;
+            .textEditor {
                 width: 100%;
                 height: 100%;
-                background-color: black;
-            }
-            .CodeMirror {
-                width: 100%;
-                height: 100%;
-                background-color: black;
-                color: white;
 
-                div.CodeMirror-cursor {
-                    border-left: 1px solid white;
+                .inArea {
+                    resize: none;
+                    width: 100%;
+                    height: 100%;
+                    background-color: black;
                 }
+                .CodeMirror {
+                    width: 100%;
+                    height: 100%;
+                    background-color: black;
+                    color: white;
 
-                .pcLine {
-                    background-color: red;
+                    div.CodeMirror-cursor {
+                        border-left: 1px solid white;
+                    }
+
+                    .pcLine {
+                        background-color: red;
+                    }
                 }
             }
         }
@@ -337,4 +351,13 @@ $topBarHeight: 50px;
         }
     }
 
+}
+
+// I don't think I need to even write it, but this is shitty.
+.markedTextEdit {
+    @for $i from 0 through 100 {
+        &.highlightLine-#{$i} .CodeMirror-code > pre:nth-child(#{$i + 1}) {
+            background-color: red;
+        }
+    }
 }

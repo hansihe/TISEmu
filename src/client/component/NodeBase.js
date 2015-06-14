@@ -1,4 +1,11 @@
+var React = require('react');
 var AppComponent = require('./AppBase');
+
+class OptionsBarComponent extends React.Component {
+    render() {
+
+    }
+}
 
 class BaseNodeComponent extends AppComponent {
     constructor(props, context) {
@@ -30,6 +37,14 @@ class BaseNodeComponent extends AppComponent {
 
     isMachineCreated() {
         return this.app.manager.isMachineCreated();
+    }
+
+    getManager() {
+        return this.app.manager;
+    }
+
+    makeOptionsBar() {
+
     }
 }
 

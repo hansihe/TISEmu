@@ -7,29 +7,29 @@ class SourceEditorComponent extends React.Component {
 
         this.editor = null;
         this.state = {
-            nodeState: props.state,
-            pc: props.pc,
+            editable: props.editable,
+            highlightLine: props.hightlightLine,
             text: props.text
         };
     }
 
     render() {
-        return <textarea 
-            ref="container" 
-            className="inArea"/>;
+        return <div className={"textEditor markedTextEdit highlightLine-"+this.state.highlightLine}>
+            <textarea 
+                ref="container" 
+                className="inArea"/>
+        </div>;
     }
 
     componentWillReceiveProps(nextProps) {
-        let nodeState = nextProps.state;
         this.setState({
-            nodeState: nodeState,
-            pc: nextProps.pc,
+            editable: nextProps.editable,
+            highlightLine: nextProps.highlightLine,
             text: nextProps.text
         });
-        this.editor.setOption('readOnly', !nodeState.editable);
     }
 
-    updatePcLine(newLine, oldLine) {
+    updateHighlightLine(newLine, oldLine) {
         if (oldLine !== undefined && oldLine !== -1) {
             this.editor.removeLineClass(oldLine, 'background', 'pcLine');
         }
@@ -39,31 +39,32 @@ class SourceEditorComponent extends React.Component {
     }
 
     componentWillUpdate(nextProps, nextState) {
-        if (this.state.pc !== nextState.pc) {
-            this.updatePcLine(nextState.pc, this.state.pc);
-        }
+        // Disabled, using css hack instead. See .markedTextEdit
+        //if (this.state.highlightLine !== nextState.highlightLine) {
+        //    this.updateHighlightLine(nextState.highlightLine, this.state.highlightLine);
+        //}
         if (this.state.text !== nextState.text) {
             this.editor.setValue(nextState.text);
+        }
+        if (this.state.editable !== nextState.editable) {
+            this.editor.setOption('readOnly', !nextState.editable);
         }
     }
 
     componentDidMount() {
         this.editor = CodeMirror.fromTextArea(this.refs.container.getDOMNode(), {
-            readOnly: !this.props.state.editable
+            readOnly: !this.state.editable
         });
-        this.editor.setValue(this.props.text);
-        this.setState({
-            text: this.props.text
-        });
+        this.editor.setValue(this.state.text);
 
         this.editor.on('beforeChange', (instance, change) => {
             change.update(change.from, change.to, _.map(change.text, text =>  text.toUpperCase()));
         });
         this.editor.on('changes', (instance, changes) => {
-            this.props.source.code = this.editor.getValue();
+            this.props.textChange(this.editor.getValue());
         });
 
-        this.updatePcLine(this.state.nodeState.state.pc);
+        this.updateHighlightLine(this.state.highlightLine);
     }
 }
 
