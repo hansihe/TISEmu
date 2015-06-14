@@ -450,6 +450,7 @@ class RootComponent extends React.Component {
 var routes = (
     <Route handler={RootComponent}>
         <DefaultRoute handler={EmulatorComponentContainer}/>
+        <Route path="/tis/" handler={EmulatorComponentContainer}/>
     </Route>
 );
 
