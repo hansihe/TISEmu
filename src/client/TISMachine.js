@@ -22,6 +22,10 @@ class TISMachine {
                 return new nodeClass(this, nodeDesc);
             });
         });
+
+        this.state = {
+            cycle: 0
+        };
     }
 
     eachNode(func) {
@@ -52,11 +56,10 @@ class TISMachine {
         this.eachNode(node => nodes.push(node));
 
         // Iterate until all conflicts are resolved
-        let res = this.stepPass(nodes, 0);
-        //this.stepPass(res, 0); // TODO: This is a really shitty way to do it, but it does make sure all interactions are done.
-        //this.eachNode(node => node.doStepPass());
-
+        this.stepPass(nodes, 0);
         this.eachNode(node => node.doStepEnd());
+
+        this.state.cycle += 1;
     }
 
     getNodeInstance([xPos, yPos]) {

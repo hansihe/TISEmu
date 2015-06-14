@@ -4,6 +4,7 @@ var nodeTypes = require('./TISMachine').nodeTypes;
 
 var React = require('react');
 var Marty = require('marty');
+Marty.HttpStateSource.removeHook('parseJSON');
 var AppComponent = require('./component/AppBaseComponent');
 
 function updateBounds(bounds, value) {
@@ -54,6 +55,7 @@ class TopBarComponent extends AppComponent {
             <a href="#" onClick={this.runFast.bind(this)}>Fast</a>
             <a href="#" onClick={this.step.bind(this)}>Step</a>
             <a href="#" onClick={this.stop.bind(this)}>Stop</a>
+            <a href="#" onClick={this.save.bind(this)}>Save Program</a>
         </div>;
     }
 
@@ -69,150 +71,15 @@ class TopBarComponent extends AppComponent {
     runFast() {
         this.app.managerStore.run(10, 200);
     }
-}
-
-
-var BasicExecutionNodeComponent = require('./component/NodeBasicExecution');
-var StackMemoryNodeComponent = require('./component/NodeStackMemory');
-var VisualNodeComponent = require('./component/NodeVisual');
-var BeeperNodeComponent = require('./component/NodeBeeper');
-class NodeDisplayComponent {
-    render() {
-        let node = this.props.node;
-        let { type } = node;
-
-        switch (type) {
-            case "blank": return <div></div>;
-            case "basicExecution": return <BasicExecutionNodeComponent {...node}/>;
-            case "stackMemory": return <StackMemoryNodeComponent {...node}/>;
-            case "visual": return <VisualNodeComponent {...node}/>;
-            case "beeper": return <BeeperNodeComponent {...node}/>;
-            default: throw "Display component not defined for: " + type;
-        }
+    save() {
+        this.app.managerStore.publishProgram();
     }
 }
+
+
 
 var ModalRenderComponent = require('./component/ModalRender');
-var PortComponent = require('./component/NodePort');
 
-class EmulatorComponent extends AppComponent {
-    constructor(props, context) {
-        super(props, context);
-    }
-
-    render() {
-        let grid = this.makeTableContent();
-        
-        return <div className="tableContainer">
-            {grid}
-        </div>;
-    }
-
-    portCol(position) {
-        return <div key={"portCol_" + position[0]} className="nodeVertPort nodePort">
-            <PortComponent orientation="v" position={position}/>
-        </div>;
-    }
-    portRow(yPos, xStart, xEnd) {
-        return <div key={"portRow_" + yPos} className="nodeHorizPortRow">
-            {_.map(_.range(xStart, xEnd + 1), xPos => {
-                return [
-                    <div key={"corner_" + xPos} className="nodeCorner"></div>,
-                    <div key={xPos} className="nodeHorizPort nodePort">
-                        <PortComponent orientation="h" position={[xPos, yPos]}/>
-                    </div>
-                ];
-            })}
-            <div key="corner_last" className="nodeCorner"></div>
-        </div>;
-    }
-
-    makeTableContent() {
-        let [tableStruct, xMin, xMax, yMin, yMax] = this.makeTableStruct(this.app.manager.nodeMap);
-
-        let lastNode;
-        let gridX = _.map(_.range(yMin, yMax + 1), (yIndex) => {
-            let xNodes = tableStruct[yIndex];
-            let gridY = _.map(_.range(xMin, xMax + 1), (xIndex) => {
-                let node = xNodes[xIndex];
-                lastNode = node;
-
-                let portCol = this.portCol(node.position);
-                return [
-                    portCol,
-                    <div key={xIndex} className="nodeCol">
-                        <NodeDisplayComponent node={node}/>
-                    </div>
-                ];
-            });
-
-            let portRow = this.portRow(yIndex, xMin, xMax);
-            let portCol = this.portCol([lastNode.position[0] + 1, lastNode.position[1]]);
-            return [
-                portRow,
-                <div key={yIndex} className="nodeRow">
-                    {gridY}
-                    {portCol}
-                </div>
-            ];
-        });
-
-        let portRow = this.portRow(lastNode.position[1] + 1, xMin, xMax);
-        let grid = <div className="nodeTable">
-            {gridX}
-            {portRow}
-        </div>;
-
-        return grid;
-    }
-
-    makeTableStruct(nodes) {
-        // Rotates the dict by 90 degrees.
-        // We do this because we want to render a html table, 
-        // and they are row-major, while our format is column-major.
-        let transposed = {};
-        _.each(nodes, (col, xPos) => {
-            _.each(col, (node, yPos) => {
-                if (!transposed[yPos]) {
-                    transposed[yPos] = {};
-                }
-                transposed[yPos][xPos] = node;
-            });
-        });
-
-        let xValues = _.map(_.keys(nodes), i => +i);
-        let xMin = _.min(xValues);
-        let xMax = _.max(xValues);
-
-        let yValues = _.map(_.keys(transposed), i => +i);
-        let yMin = _.min(yValues);
-        let yMax = _.max(yValues);
-
-        // Fill in unfilled rows and cells
-        let nodeGrid = _.zipObject(_.map(_.range(yMin, yMax + 1), yPos => {
-            let col = transposed[yPos];
-            return [yPos, _.zipObject(_.map(_.range(xMin, xMax + 1), xPos => {
-                if (col === undefined || col[xPos] === undefined) {
-                    return [xPos, {
-                        type: 'blank',
-                        position: [xPos, yPos]
-                    }];
-                }
-                return [xPos, {
-                    type: col[xPos].type,
-                    desc: col[xPos],
-                    position: [xPos, yPos]
-                }];
-            }))];
-        }));
-
-        return [nodeGrid, xMin, xMax, yMin, yMax];
-    }
-}
-
-var EmulatorComponentContainer = Marty.createContainer(EmulatorComponent, {
-    listenTo: 'managerStore'
-});
 
 // [cycleDelay, ticksPerCycle]
 let speeds = [
@@ -301,6 +168,10 @@ class MachineManagerStore extends Marty.Store {
     toSource() {
         return this.app.manager.toSource();
     }
+
+    publishProgram() {
+        return this.app.programStore.saveProgram(this.toSource());
+    }
 }
 
 class ModalStore extends Marty.Store {
@@ -354,19 +225,29 @@ class ProgramAPI extends Marty.HttpStateSource {
         return this.get('/Program/' + id)
             .then(res => {
                 if (res.ok) {
-                    let json = res.json();
-                    return json.program.source;
+                    return res.json().then(json => {
+                        return json.program.source;
+                    });
                 }
                 throw new Error("Could not get program", res);
             });
     }
 
     publishProgram(source) {
-        return this.post('/Program', { body: source })
+        console.log(source);
+        return this.post({
+            url: '/Program',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(source)
+        })
             .then(res => {
                 if (res.ok) {
-                    let json = res.json();
-                    return json.program.id;
+                    return res.json().then(json => {
+                        return json.program.id;
+                    });
                 }
                 throw new Error("Could not add program", res);
             });
@@ -375,19 +256,31 @@ class ProgramAPI extends Marty.HttpStateSource {
 
 class ProgramQueries extends Marty.Queries {
     fetchProgram(id) {
-        this.dispatch(this.app.constants.FETCH_PROGRAM_STARTING, id);
+        this.dispatch(Constants.FETCH_PROGRAM_STARTING, id);
         return this.app.programAPI.getProgram(id)
-            .then(program => this.dispatch(this.app.constants.FETCH_PROGRAM, id, program))
-            .catch(err => this.dispatch(this.app.constants.FETCH_PROGRAM_FAILED, id));
+            .then(program => {
+                this.dispatch(Constants.FETCH_PROGRAM, id, program);
+                return program;
+            })
+            .catch(err => {
+                this.dispatch(Constants.FETCH_PROGRAM_FAILED, id);
+                return err;
+            });
     }
 }
 
 class ProgramActions extends Marty.ActionCreators {
     publishProgram(source) {
-        this.dispatch(this.app.constants.PUBLISH_PROGRAM_STARTING, source);
+        this.dispatch(Constants.PUBLISH_PROGRAM_STARTING, source);
         return this.app.programAPI.publishProgram(source)
-            .then(id => this.dispatch(this.app.constants.PUBLISH_PROGRAM, source, id))
-            .catch(err => this.dispatch(this.app.constants.PUBLISH_PROGRAM_FAILED, source, err));
+            .then(id => {
+                this.dispatch(Constants.PUBLISH_PROGRAM, source, id);
+                return id;
+            })
+            .catch(err => {
+                this.dispatch(Constants.PUBLISH_PROGRAM_FAILED, source, err);
+                return err;
+            });
     }
 }
 
@@ -398,10 +291,54 @@ class ProgramStore extends Marty.Store {
             programs: {}
         };
         this.handlers = {
-
+            programFetched: Constants.FETCH_PROGRAM,
+            programPublished: Constants.PUBLISH_PROGRAM
         };
     }
 
+    programFetched(id, program) {
+        console.log(id, program);
+        this.state.programs[id] = program;
+        this.hasChanged();
+    }
+    programPublished(program, id) {
+        this.state.programs[id] = program;
+        this.hasChanged();
+    }
+
+    fetchProgram(id) {
+        return this.fetch({
+            id: id,
+            locally() {
+                return this.state.programs[id];
+            },
+            remotely() {
+                return this.app.programQueries.fetchProgram(id);
+            }
+        });
+    }
+
+    getProgram(id) {
+        return this.state.programs[id];
+    }
+
+    loadProgram(id) {
+        let fetch = this.fetchProgram(id);
+        fetch.toPromise().then(() => {
+            this.app.managerStore.fromSource(this.getProgram(id));
+        });
+        return fetch;
+    }
+
+    saveProgram(source) {
+        let promise = this.app.programActions.publishProgram(source);
+        return promise
+            .then(id => {
+                console.log(id);
+                this.app.router.transitionTo('/' + id);
+                return id;
+            });
+    }
 }
 
 class Application extends Marty.Application {
@@ -447,10 +384,27 @@ class RootComponent extends React.Component {
     }
 }
 
+var EmulatorDisplayComponent = require('./component/EmulatorDisplayComponent');
+
+var FetchProgramContainer = Marty.createContainer(EmulatorDisplayComponent, {
+    listenTo: 'programStore',
+    fetch: {
+        program() {
+            return this.app.programStore.loadProgram(this.props.params.programId);
+        }
+    },
+    pending() {
+        return <div>Loading</div>;
+    },
+    failed() {
+        return <div>Failed to fetch program :(<br/>It may not exist.</div>;
+    }
+});
+
 var routes = (
     <Route handler={RootComponent}>
-        <DefaultRoute handler={EmulatorComponentContainer}/>
-        <Route path="/tis/" handler={EmulatorComponentContainer}/>
+        <DefaultRoute handler={EmulatorDisplayComponent}/>
+        <Route path="/:programId" handler={FetchProgramContainer}/>
     </Route>
 );
 
@@ -458,7 +412,13 @@ window.onload = function() {
     var app = new Application();
     window.app = app;
 
-    Router.run(routes, HistoryLocation, (Root) => {
+    let router = Router.create({
+        routes: routes,
+        location: HistoryLocation
+    });
+    app.router = router;
+
+    router.run(Root => {
         React.render((
             <Marty.ApplicationContainer app={app}> 
                 <Root/>

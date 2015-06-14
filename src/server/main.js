@@ -100,7 +100,7 @@ exports.makeServer = function(config) {
     app.use(bodyParser.json());
     app.use('/api', apiRouter);
     app.use('/static', express.static('./build/www'));
-    app.get('/', function(req, res, next) {
+    app.get('*', function(req, res, next) {
         res.sendFile(path.resolve(__dirname + '../../../www/index.html'));
     });
 
