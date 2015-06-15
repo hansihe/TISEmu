@@ -40,6 +40,7 @@ let opHandlers = {
     },
     NEG([]) {
         this.state.acc = -this.state.acc;
+        this.incrPc();
     },
     JMP([label]) {
         this.jumpLabel(label);
