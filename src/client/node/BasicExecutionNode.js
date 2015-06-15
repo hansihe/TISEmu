@@ -236,6 +236,7 @@ class BasicExecutionNode extends BaseNode {
         if (this.stepIncrOp) {
             this.stepIncrOp = false;
             this.incrPc();
+            this.checkBreakpoint();
             return true;
         }
 
@@ -247,7 +248,6 @@ class BasicExecutionNode extends BaseNode {
         handler.call(this, operands);
 
         this.checkBreakpoint();
-
         return true;
     }
 }
