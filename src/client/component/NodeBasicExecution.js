@@ -27,7 +27,9 @@ class BasicExecutionNodeComponent extends BaseNodeComponent {
                     editable={state.editable}
                     text={nodeDesc.code}
                     textChange={this.setCode.bind(this)}
-                    highlightLine={state.state.pc}/>
+                    highlightLine={state.state.pc}
+                    breakpoints={nodeDesc.temp.breakpoints}
+                    toggleBreakpoint={this.toggleBreakpoint.bind(this)}/>
             </div>
             <div className="rightPanel">
                 <div className="fragment">ACC<br/>{state.state.acc}</div>
@@ -40,6 +42,17 @@ class BasicExecutionNodeComponent extends BaseNodeComponent {
 
     setCode(source) {
         this.app.manager.getNodeDescriptor(this.props.position).code = source;
+    }
+    toggleBreakpoint(line) {
+        let desc = this.getNodeDescriptor();
+        let breakpoints = desc.temp.breakpoints;
+        if (_.contains(breakpoints, line)) {
+            _.remove(breakpoints, l => l === line);
+        } else {
+            breakpoints.push(line);
+        }
+
+        this.forceUpdate();
     }
 }
 

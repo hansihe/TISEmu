@@ -124,6 +124,7 @@ class MachineManagerStore extends Marty.Store {
     _runStep() {
         if (this.state.running) {
             for (let i = 0; i < this.state.runSpeed[1]; i++) {
+                if (this.app.manager.getMachine().state.breakpoint) return;
                 this.app.manager.getMachine().step();
             }
             this.hasChanged();

@@ -9,7 +9,9 @@ class SourceEditorComponent extends React.Component {
         this.state = {
             editable: props.editable,
             highlightLine: props.hightlightLine,
-            text: props.text
+            text: props.text,
+            hasBreakpoints: props.breakpoints !== undefined,
+            breakpoints: props.breakpoints
         };
     }
 
@@ -25,7 +27,9 @@ class SourceEditorComponent extends React.Component {
         this.setState({
             editable: nextProps.editable,
             highlightLine: nextProps.highlightLine,
-            text: nextProps.text
+            text: nextProps.text,
+            hasBreakpoints: nextProps.breakpoints !== undefined,
+            breakpoints: nextProps.breakpoints
         });
     }
 
@@ -38,22 +42,35 @@ class SourceEditorComponent extends React.Component {
         }
     }
 
+    updateBreakpoints(lines) {
+        this.editor.clearGutter("textEditorBreakpoint");
+        _.each(lines, line => {
+            let marker = document.createElement('div');
+            marker.style.color = "#822";
+            marker.innerHTML = "x";
+            this.editor.setGutterMarker(line, "textEditorBreakpoint", marker);
+        });
+    }
+
     componentWillUpdate(nextProps, nextState) {
         // Disabled, using css hack instead. See .markedTextEdit
         //if (this.state.highlightLine !== nextState.highlightLine) {
         //    this.updateHighlightLine(nextState.highlightLine, this.state.highlightLine);
         //}
         if (this.state.text !== nextState.text) {
+            console.log("update");
             this.editor.setValue(nextState.text);
         }
         if (this.state.editable !== nextState.editable) {
             this.editor.setOption('readOnly', !nextState.editable);
         }
+        this.updateBreakpoints(nextState.breakpoints);
     }
 
     componentDidMount() {
         this.editor = CodeMirror.fromTextArea(this.refs.container.getDOMNode(), {
-            readOnly: !this.state.editable
+            readOnly: !this.state.editable,
+            gutters: this.state.hasBreakpoints ? ["textEditorBreakpoint"] : []
         });
         this.editor.setValue(this.state.text);
 
@@ -61,11 +78,24 @@ class SourceEditorComponent extends React.Component {
             change.update(change.from, change.to, _.map(change.text, text =>  text.toUpperCase()));
         });
         this.editor.on('changes', (instance, changes) => {
-            this.props.textChange(this.editor.getValue());
+            this.props.textChange(instance.getValue());
+            this.updateBreakpoints(this.state.breakpoints);
+        });
+        this.editor.on('gutterClick', (instance, line) => {
+            this.props.toggleBreakpoint && this.props.toggleBreakpoint(line);
         });
 
         this.updateHighlightLine(this.state.highlightLine);
+        this.updateBreakpoints(this.state.breakpoints);
     }
 }
+SourceEditorComponent.propTypes = {
+    editable: React.PropTypes.bool,
+    text: React.PropTypes.string,
+    textChange: React.PropTypes.func,
+    highlightLine: React.PropTypes.number,
+    breakpoints: React.PropTypes.arrayOf(React.PropTypes.number),
+    toggleBreakpoint: React.PropTypes.func
+};
 
 export default SourceEditorComponent;

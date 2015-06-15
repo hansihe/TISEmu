@@ -84,6 +84,7 @@ class BasicExecutionNode extends BaseNode {
         super(machine, source);
 
         this.ast = parse(source.code);
+        this.breakpoints = source.temp.breakpoints;
 
         // If the node doesn't actually do anything, there is no point in doing anything
         this.hasInstructions = false;
@@ -103,8 +104,7 @@ class BasicExecutionNode extends BaseNode {
     }
 
     incrPc() {
-        this.state.pc += 1;
-        this.checkPc();
+        this.setPc(this.state.pc + 1);
     }
     setPc(value) {
         this.state.pc = value;
@@ -153,31 +153,7 @@ class BasicExecutionNode extends BaseNode {
                     return this.read('d');
                 }
                 case "ANY": {
-                    let l = this.softRead('l');
-                    if (l !== undefined) {
-                        this.state.lastPort = 'l';
-                        return l;
-                    }
-
-                    let r = this.softRead('r');
-                    if (r !== undefined) {
-                        this.state.lastPort = 'r';
-                        return r;
-                    }
-
-                    let u = this.softRead('u');
-                    if (u !== undefined) {
-                        this.state.lastPort = 'u';
-                        return u;
-                    }
-
-                    let d = this.softRead('d');
-                    if (d !== undefined) {
-                        this.state.lastPort = 'd';
-                        return d;
-                    }
-
-                    throw this.WAIT_READ;
+                    return this.read('a');
                 }
                 case "LAST": {
                     // TODO: Reverse implementation
@@ -246,6 +222,12 @@ class BasicExecutionNode extends BaseNode {
         }
     }
 
+    checkBreakpoint() {
+        if (_.contains(this.breakpoints, this.state.pc)) {
+            this.machine.onBreakpoint();
+        }
+    }
+
     pass() {
         if (!this.hasInstructions) return true;
 
@@ -264,6 +246,8 @@ class BasicExecutionNode extends BaseNode {
 
         handler.call(this, operands);
 
+        this.checkBreakpoint();
+
         return true;
     }
 }
@@ -274,5 +258,10 @@ BasicExecutionNode.getBaseDescriptor = function() {
         code: ""
     };
 }; 
+BasicExecutionNode.getTempDescriptor = function() {
+    return {
+        breakpoints: []
+    };
+};
 
 export default BasicExecutionNode;

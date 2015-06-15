@@ -6,6 +6,8 @@ export let nodeTypes = {
     stackMemory: require('./node/StackMemoryNode'),
     visual: require('./node/VisualNode'),
     numpad: require('./node/NumpadNode'),
+    //input: require('./node/InputNode'),
+    //output: require('./node/OutputNode'),
     beeper: require('./node/BeeperNode')
 };
 
@@ -25,7 +27,8 @@ class TISMachine {
         });
 
         this.state = {
-            cycle: 0
+            cycle: 0,
+            breakpoint: false
         };
     }
 
@@ -53,6 +56,8 @@ class TISMachine {
     }
 
     step() {
+        this.state.breakpoint = false;
+
         let nodes = [];
         this.eachNode(node => nodes.push(node));
 
@@ -61,6 +66,10 @@ class TISMachine {
         this.eachNode(node => node.doStepEnd());
 
         this.state.cycle += 1;
+    }
+
+    onBreakpoint() {
+        this.state.breakpoint = true;
     }
 
     getNodeInstance([xPos, yPos]) {
@@ -99,6 +108,13 @@ class TISMachineManager {
                 this.nodeMap[xPos] = {};
             }
 
+            let nodeClass = nodeTypes[nodeDescriptor.type];
+            if (nodeClass.getTempDescriptor) {
+                nodeDescriptor.temp = nodeClass.getTempDescriptor();
+            } else {
+                nodeDescriptor.temp = {};
+            }
+
             this.nodeMap[xPos][yPos] = nodeDescriptor;
         });
     }
@@ -111,8 +127,13 @@ class TISMachineManager {
             });
         });
 
+        let filteredNodes = _.map(nodes, node => {
+            delete node['temp'];
+            return node;
+        });
+
         return {
-            nodes: nodes
+            nodes: filteredNodes
         };
     }
 
@@ -132,6 +153,11 @@ class TISMachineManager {
         };
         if (nodeClass.getBaseDescriptor) {
             _.assign(descriptor, nodeClass.getBaseDescriptor());
+        }
+        if (nodeClass.getTempDescriptor) {
+            descriptor.temp = nodeClass.getTempDescriptor();
+        } else {
+            descriptor.temp = {};
         }
 
         console.log(descriptor);

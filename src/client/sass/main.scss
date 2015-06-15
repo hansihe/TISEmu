@@ -196,6 +196,11 @@ $topBarHeight: 50px;
     height: $frameSize;
     border: 3px double white;
 
+    .heading {
+        width: 100%;
+        text-align: center;
+    }
+
     .leftPanel {
         float: left;
         height: $innerFrameSize;
@@ -274,31 +279,7 @@ $topBarHeight: 50px;
 
     &.basicExecNode {
         .leftPanel {
-            .textEditor {
-                width: 100%;
-                height: 100%;
-
-                .inArea {
-                    resize: none;
-                    width: 100%;
-                    height: 100%;
-                    background-color: black;
-                }
-                .CodeMirror {
-                    width: 100%;
-                    height: 100%;
-                    background-color: black;
-                    color: white;
-
-                    div.CodeMirror-cursor {
-                        border-left: 1px solid white;
-                    }
-
-                    .pcLine {
-                        background-color: red;
-                    }
-                }
-            }
+            // .textEditor
         }
         .rightPanel {
             .fragment {
@@ -359,8 +340,39 @@ $topBarHeight: 50px;
 // I don't think I need to even write it, but this is shitty.
 .markedTextEdit {
     @for $i from 0 through 100 {
-        &.highlightLine-#{$i} .CodeMirror-code > pre:nth-child(#{$i + 1}) {
+        &.highlightLine-#{$i} .CodeMirror-code > :nth-child(#{$i + 1}) {
             background-color: red;
         }
     }
+}
+
+.textEditor {
+    width: 100%;
+    height: 100%;
+
+    .inArea {
+        resize: none;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+    }
+    .CodeMirror {
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        color: white;
+
+        div.CodeMirror-cursor {
+            border-left: 1px solid white;
+        }
+
+        .pcLine {
+            background-color: red;
+        }
+    }
+}
+
+.textEditorBreakpoint {
+    width: 10px;
+    background-color: black;
 }

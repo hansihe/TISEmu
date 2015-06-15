@@ -26,6 +26,36 @@ class BaseNode {
     }
 
     read(side) {
+        if (side === 'a') {
+            let value;
+
+            value = this.softRead('l');
+            if (value !== undefined) {
+                this.state.lastPort = 'l';
+                return value;
+            }
+
+            value = this.softRead('r');
+            if (value !== undefined) {
+                this.state.lastPort = 'r';
+                return value;
+            }
+
+            value = this.softRead('u');
+            if (value !== undefined) {
+                this.state.lastPort = 'u';
+                return value;
+            }
+
+            value = this.softRead('d');
+            if (value !== undefined) {
+                this.state.lastPort = 'd';
+                return value;
+            }
+
+            throw this.WAIT_READ;
+        }
+
         let value = this.softRead(side);
         if (value === undefined) {
             throw this.WAIT_READ;
@@ -53,9 +83,11 @@ class BaseNode {
         delete this.out[side];
         return value;
     }
+    isWriting() {
+        return _.size(this.out) !== 0;
+    }
     waitWrite() {
-        let wait = _.size(this.out) !== 0;
-        if (wait) {
+        if (this.isWriting()) {
             throw this.WAIT_WRITE;
         }
     }

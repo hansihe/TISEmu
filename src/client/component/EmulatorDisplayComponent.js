@@ -7,21 +7,29 @@ var BasicExecutionNodeComponent = require('./NodeBasicExecution');
 var StackMemoryNodeComponent = require('./NodeStackMemory');
 var VisualNodeComponent = require('./NodeVisual');
 var NumpadNodeComponent = require('./NodeNumpad');
+var InputNodeComponent = require('./NodeInput');
+//var OutputNodeComponent = require('./NodeOutput);
 var BeeperNodeComponent = require('./NodeBeeper');
+
+let nodeComponents = {
+    blank: "div",
+    basicExecution: BasicExecutionNodeComponent,
+    stackMemory: StackMemoryNodeComponent,
+    visual: VisualNodeComponent,
+    numpad: NumpadNodeComponent,
+    input: InputNodeComponent,
+//    output: OutputNodeComponent,
+    beeper: BeeperNodeComponent
+};
+
 class NodeDisplayComponent {
     render() {
         let node = this.props.node;
         let { type } = node;
 
-        switch (type) {
-            case "blank": return <div></div>;
-            case "basicExecution": return <BasicExecutionNodeComponent {...node}/>;
-            case "stackMemory": return <StackMemoryNodeComponent {...node}/>;
-            case "visual": return <VisualNodeComponent {...node}/>;
-            case "numpad": return <NumpadNodeComponent {...node}/>;
-            case "beeper": return <BeeperNodeComponent {...node}/>;
-            default: throw "Display component not defined for: " + type;
-        }
+        let component = nodeComponents[type];
+
+        return React.createElement(component, node);
     }
 }
 
