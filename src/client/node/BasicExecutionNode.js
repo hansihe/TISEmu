@@ -126,7 +126,7 @@ class BasicExecutionNode extends BaseNode {
                 this.state.pc = 0;
                 wraps += 1;
                 continue;
-            } else if (instruction[0] === "SKIP") {
+            } else if (instruction[0][0] === "SKIP") {
                 this.state.pc += 1;
                 continue;
             } else {
@@ -223,7 +223,7 @@ class BasicExecutionNode extends BaseNode {
     }
 
     checkBreakpoint() {
-        if (_.contains(this.breakpoints, this.state.pc)) {
+        if (this.ast.instructions[this.state.pc][1]) {
             this.machine.onBreakpoint();
         }
     }
@@ -242,7 +242,7 @@ class BasicExecutionNode extends BaseNode {
 
         this.checkPc();
 
-        let [opCode, operands] = this.ast.instructions[this.state.pc];
+        let [[opCode, operands], breakpoint] = this.ast.instructions[this.state.pc];
         let handler = opHandlers[opCode];
 
         handler.call(this, operands);
