@@ -64,7 +64,7 @@ class SourceEditorComponent extends React.Component {
         if (this.state.editable !== nextState.editable) {
             this.editor.setOption('readOnly', !nextState.editable);
         }
-        this.updateBreakpoints(nextState.breakpoints);
+        //this.updateBreakpoints(nextState.breakpoints);
     }
 
     componentDidMount() {
@@ -86,7 +86,7 @@ class SourceEditorComponent extends React.Component {
         });
 
         this.updateHighlightLine(this.state.highlightLine);
-        this.updateBreakpoints(this.state.breakpoints);
+        //this.updateBreakpoints(this.state.breakpoints);
     }
 }
 SourceEditorComponent.propTypes = {
@@ -94,8 +94,8 @@ SourceEditorComponent.propTypes = {
     text: React.PropTypes.string,
     textChange: React.PropTypes.func,
     highlightLine: React.PropTypes.number,
-    breakpoints: React.PropTypes.arrayOf(React.PropTypes.number),
-    toggleBreakpoint: React.PropTypes.func
+    //breakpoints: React.PropTypes.arrayOf(React.PropTypes.number),
+    //toggleBreakpoint: React.PropTypes.func
 };
 
 export default SourceEditorComponent;

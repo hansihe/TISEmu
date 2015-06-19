@@ -28,8 +28,11 @@ class NodeDisplayComponent {
         let { type } = node;
 
         let component = nodeComponents[type];
+        let element = React.createElement(component, node);
 
-        return React.createElement(component, node);
+        return <div>
+            {element}
+        </div>;
     }
 }
 

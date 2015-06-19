@@ -232,8 +232,10 @@ class BasicExecutionNode extends BaseNode {
     pass() {
         if (!this.hasInstructions) return true;
 
+        // If we wrote something on the previous cycle, we wait until that is resolved.
         this.waitWrite();
 
+        // Currently only used for special MOV write behavior. See MOV opcode handler/timings.
         if (this.stepIncrOp) {
             this.stepIncrOp = false;
             this.incrPc();

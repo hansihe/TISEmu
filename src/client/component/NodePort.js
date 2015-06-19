@@ -14,16 +14,20 @@ class PortComponent extends AppComponent {
 
         let symbolSet = this.getOrientation() ? [symbols.left, symbols.right] : [symbols.up, symbols.down];
 
-        if (this.getMode()) {
+        if (this.getMode()) { // Running
+            let nodeOne = this.getNodeOneInstance();
+            let nodeTwo = this.getNodeTwoInstance();
             if (isConnected) {
                 return <div className="portDisplay">
+                    <span className="valueDisplay">{nodeTwo.getSideDisplayValue(this.getNodeTwoPort())}</span>
                     <span>{symbolSet[0]}</span>
                     <span>{symbolSet[1]}</span>
+                    <span className="valueDisplay">{nodeOne.getSideDisplayValue(this.getNodeOnePort())}</span>
                 </div>;
             } else {
                 return <div></div>;
             }
-        } else {
+        } else { // Not running
             if (hasAddButton) {
                 return <a className="addButton" onClick={this.addNode.bind(this)}>+</a>;
             } else if (isConnected) {
@@ -66,6 +70,9 @@ class PortComponent extends AppComponent {
     getNodeOneDesc() {
         return this.app.manager.getNodeDescriptor(this.getNodeOnePos());
     }
+    getNodeOneInstance() {
+        return this.app.manager.getMachine().getNodeInstance(this.getNodeOnePos());
+    }
     getNodeOnePos() {
         let pos = this.props.position;
         if (this.getOrientation()) {
@@ -74,8 +81,15 @@ class PortComponent extends AppComponent {
             return [pos[0], pos[1] - 1];
         }
     }
+    getNodeOnePort() {
+        return this.getOrientation() ? 'r' : 'd';
+    }
+
     getNodeTwoDesc() {
         return this.app.manager.getNodeDescriptor(this.getNodeTwoPos());
+    }
+    getNodeTwoInstance() {
+        return this.app.manager.getMachine().getNodeInstance(this.getNodeTwoPos());
     }
     getNodeTwoPos() {
         let pos = this.props.position;
@@ -84,6 +98,9 @@ class PortComponent extends AppComponent {
         } else {
             return [pos[0], pos[1]];
         }
+    }
+    getNodeTwoPort() {
+        return this.getOrientation() ? 'l' : 'u';
     }
 }
 

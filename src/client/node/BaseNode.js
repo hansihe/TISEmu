@@ -95,6 +95,11 @@ class BaseNode {
         this.outBuffer[side] = value;
     }
 
+    getSideDisplayValue(side) {
+        if (this.out['a']) return this.out[a];
+        return this.out[side];
+    }
+
     getSideNode(side) {
         let sidePos = sumPositions(this.position, getSide(side));
         return this.machine.getNodeInstance(sidePos);

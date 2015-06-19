@@ -188,6 +188,12 @@ $topBarHeight: 50px;
         justify-content: center;
         width: 100%;
         height: 100%;
+
+        .valueDisplay {
+            min-width: 30px;
+            min-height: 16px;
+            text-align: center;
+        }
     }
 }
 
