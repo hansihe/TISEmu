@@ -17,7 +17,7 @@ let nodeComponents = {
     stackMemory: StackMemoryNodeComponent,
     visual: VisualNodeComponent,
     numpad: NumpadNodeComponent,
-    input: InputNodeComponent,
+//    input: InputNodeComponent,
 //    output: OutputNodeComponent,
     beeper: BeeperNodeComponent
 };
@@ -33,78 +33,110 @@ class NodeDisplayComponent {
     }
 }
 
+class PortRowComponent extends AppComponent {
+    constructor(props, context) {
+        super(props, context);
+    }
+
+    render() {
+        let { xMin, xMax, yMin, yMax } = this.props.bounds;
+        let yPos = this.props.rowNum;
+
+        let ports = _.map(_.range(xMin, xMax + 1), xPos => {
+            return [
+                <div key={"corner_" + xPos} className="nodeCorner"></div>,
+                <div key={xPos} className="nodeHorizPort nodePort">
+                    <PortComponent orientation="h" position={[xPos, yPos]}/>
+                </div>
+            ];
+        });
+        return <div key={"portRow_" + yPos} className="nodeHorizPortRow">
+            {ports}
+            <div key="corner_last" className="nodeCorner"></div>
+        </div>;
+    }
+}
+
+class NodeRowComponent extends AppComponent {
+    constructor(props, context) {
+        super(props, context);
+    }
+
+    render() {
+        let rowStruct = this.props.rowStruct;
+        let { xMin, xMax, yMin, yMax } = this.props.bounds;
+
+        let columns = _.map(_.range(xMin, xMax + 1), (xIndex) => {
+            let node = rowStruct[xIndex];
+
+            let portCol = this.portCol(node.position);
+            return [
+                portCol,
+                <div key={xIndex} className="nodeCol">
+                    <NodeDisplayComponent node={node}/>
+                </div>
+            ];
+        });
+
+        let portCol = this.portCol([xMax + 1, this.props.yPos]);
+        return <div key={this.props.yPos} className="nodeRow">
+            {columns}
+            {portCol}
+        </div>
+            //{portCol}
+    }
+    portCol(position) {
+        return <div key={"portCol_" + position[0]} className="nodeVertPort nodePort">
+            <PortComponent orientation="v" position={position}/>
+        </div>;
+    }
+}
+
+class NodeGridComponent extends AppComponent {
+    constructor(props, context) {
+        super(props, context);
+    }
+
+    render() {
+        let gridStruct = this.props.gridStruct;
+        let { xMin, xMax, yMin, yMax } = this.props.bounds;
+
+        //let lastNode;
+        let rows = _.map(_.range(yMin, yMax + 1), rowIndex => {
+            let rowStruct = gridStruct[rowIndex];
+            //lastNode = node;
+
+            return [
+                <PortRowComponent rowNum={rowIndex} bounds={this.props.bounds}/>,
+                <NodeRowComponent rowStruct={rowStruct} bounds={this.props.bounds} yPos={rowIndex}/>
+            ];
+        });
+        return <div className="tableContainer">
+            <div className="nodeTable">
+                {rows}
+                <PortRowComponent rowNum={yMax + 1} bounds={this.props.bounds}/>
+            </div>
+        </div>;
+    }
+}
+NodeGridComponent.propTypes = {
+    gridStruct: React.PropTypes.object.isRequired,
+    bounds: React.PropTypes.object.isRequired
+};
+
 class EmulatorComponent extends AppComponent {
     constructor(props, context) {
         super(props, context);
     }
 
     render() {
-        let grid = this.makeTableContent();
-        
-        return <div className="tableContainer">
-            {grid}
-        </div>;
+        let [gridStruct, gridBounds] = this.makeGridStruct(this.app.manager.nodeMap);
+
+        return <NodeGridComponent gridStruct={gridStruct} bounds={gridBounds}/>;
     }
 
-    portCol(position) {
-        return <div key={"portCol_" + position[0]} className="nodeVertPort nodePort">
-            <PortComponent orientation="v" position={position}/>
-        </div>;
-    }
-    portRow(yPos, xStart, xEnd) {
-        return <div key={"portRow_" + yPos} className="nodeHorizPortRow">
-            {_.map(_.range(xStart, xEnd + 1), xPos => {
-                return [
-                    <div key={"corner_" + xPos} className="nodeCorner"></div>,
-                    <div key={xPos} className="nodeHorizPort nodePort">
-                        <PortComponent orientation="h" position={[xPos, yPos]}/>
-                    </div>
-                ];
-            })}
-            <div key="corner_last" className="nodeCorner"></div>
-        </div>;
-    }
 
-    makeTableContent() {
-        let [tableStruct, xMin, xMax, yMin, yMax] = this.makeTableStruct(this.app.manager.nodeMap);
-
-        let lastNode;
-        let gridX = _.map(_.range(yMin, yMax + 1), (yIndex) => {
-            let xNodes = tableStruct[yIndex];
-            let gridY = _.map(_.range(xMin, xMax + 1), (xIndex) => {
-                let node = xNodes[xIndex];
-                lastNode = node;
-
-                let portCol = this.portCol(node.position);
-                return [
-                    portCol,
-                    <div key={xIndex} className="nodeCol">
-                        <NodeDisplayComponent node={node}/>
-                    </div>
-                ];
-            });
-
-            let portRow = this.portRow(yIndex, xMin, xMax);
-            let portCol = this.portCol([lastNode.position[0] + 1, lastNode.position[1]]);
-            return [
-                portRow,
-                <div key={yIndex} className="nodeRow">
-                    {gridY}
-                    {portCol}
-                </div>
-            ];
-        });
-
-        let portRow = this.portRow(lastNode.position[1] + 1, xMin, xMax);
-        let grid = <div className="nodeTable">
-            {gridX}
-            {portRow}
-        </div>;
-
-        return grid;
-    }
-
-    makeTableStruct(nodes) {
+    makeGridStruct(nodes) {
         // Rotates the dict by 90 degrees.
         // We do this because we want to render a html table, 
         // and they are row-major, while our format is column-major.
@@ -146,7 +178,7 @@ class EmulatorComponent extends AppComponent {
             }))];
         }));
 
-        return [nodeGrid, xMin, xMax, yMin, yMax];
+        return [nodeGrid, {xMin, xMax, yMin, yMax}];
     }
 }
 
