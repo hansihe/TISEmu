@@ -140,7 +140,25 @@ $topBarHeight: 50px;
 
                     border: 1px solid #111;
 
-                    // .nodeFrame
+                    .nodeContainer {
+                        position: relative;
+
+                        // .nodeFrame
+
+                        .controlBar {
+                            visibility: hidden;
+                            position: absolute;
+                            top: -2px;
+                            right: -2px;
+
+                            padding: 3px;
+                            background-color: rgba(0.4, 0.4, 0.4, 0.6);
+                        }
+
+                        &:hover > .controlBar {
+                            visibility: visible;
+                        }
+                    }
                 }
             }
         }

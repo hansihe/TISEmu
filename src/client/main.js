@@ -49,6 +49,13 @@ var Constants = Marty.createConstants([
 
 class TopBarComponent extends AppComponent {
     render() {
+        let cyclesDisplay;
+        if (this.app.manager.isMachineCreated()) {
+            cyclesDisplay = <div className="cycleDisplay">
+                Cycle: {this.app.manager.getMachine().state.cycle}
+            </div>;
+        }
+
         return <div className="topBar">
             <div className="heading">TISE</div>
             <a href="#" onClick={this.run.bind(this)}>Run</a>
@@ -56,6 +63,7 @@ class TopBarComponent extends AppComponent {
             <a href="#" onClick={this.step.bind(this)}>Step</a>
             <a href="#" onClick={this.stop.bind(this)}>Stop</a>
             <a href="#" onClick={this.save.bind(this)}>Save Program</a>
+            {cyclesDisplay}
         </div>;
     }
 
@@ -75,7 +83,9 @@ class TopBarComponent extends AppComponent {
         this.app.managerStore.publishProgram();
     }
 }
-
+let TopBarComponentContainer = Marty.createContainer(TopBarComponent, {
+    listenTo: ['managerStore']
+});
 
 
 var ModalRenderComponent = require('./component/ModalRender');
@@ -379,7 +389,7 @@ class RootComponent extends React.Component {
     render() {
         return <div className="appContainer">
             <ModalRenderComponent/>
-            <TopBarComponent/>
+            <TopBarComponentContainer/>
             <RouteHandler/>
         </div>;
     }

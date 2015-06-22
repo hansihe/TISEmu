@@ -22,7 +22,15 @@ let nodeComponents = {
     beeper: BeeperNodeComponent
 };
 
-class NodeDisplayComponent {
+class NodeOptionBar extends AppComponent {
+    render() {
+        return <div className="controlBar">
+            X
+        </div>;
+    }
+}
+
+class NodeDisplayComponent extends AppComponent {
     render() {
         let node = this.props.node;
         let { type } = node;
@@ -30,7 +38,10 @@ class NodeDisplayComponent {
         let component = nodeComponents[type];
         let element = React.createElement(component, node);
 
-        return <div>
+        let optionBar = !this.app.manager.isMachineCreated() ? <NodeOptionBar/> : null;
+
+        return <div className="nodeContainer">
+            {optionBar}
             {element}
         </div>;
     }

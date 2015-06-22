@@ -90,14 +90,14 @@ class BasicExecutionNode extends BaseNode {
         // If the node doesn't actually do anything, there is no point in doing anything
         this.hasInstructions = false;
         _.each(this.ast.instructions, instruction => {
-            if (instruction[0] !== "SKIP") this.hasInstructions = true;
+            if (instruction[0][0] !== "SKIP") this.hasInstructions = true;
         });
 
         this.state = {
             pc: 0,
             acc: 0,
             bak: 0,
-            lastPort: -1,
+            lastPort: null,
             mode: this.hasInstructions ? this.modes.RUN : this.modes.IDLE
         };
 
@@ -158,7 +158,7 @@ class BasicExecutionNode extends BaseNode {
                 }
                 case "LAST": {
                     // TODO: Reverse implementation
-                    if (this.state.lastPort === -1) return 0;
+                    if (this.state.lastPort === null) return 0;
                     return this.read(this.state.lastPort);
                 }
                 default: {
@@ -198,7 +198,7 @@ class BasicExecutionNode extends BaseNode {
                 return true;
             }
             case "LAST": {
-                if (this.state.lastPort === -1) throw "What should I do here?";
+                if (this.state.lastPort === null) throw "What should I do here?";
                 this.write(this.state.lastPort, value);
                 return true;
             }

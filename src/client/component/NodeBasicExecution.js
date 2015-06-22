@@ -2,11 +2,19 @@ var React = require('react');
 var BaseNodeComponent = require('./NodeBase');
 var SourceEditorComponent = require('./SourceEditor');
 
+let lastPortNames = {
+    null: "N/A",
+    l: "LEFT",
+    r: "RIGHT",
+    u: "UP",
+    d: "DOWN"
+};
+
 class BasicExecutionNodeComponent extends BaseNodeComponent {
     constructor(props, context) {
         super(props, context);
         this.nodeStateDefaults = {
-            pc: -1,
+            pc: null,
             acc: 0,
             bak: 0,
             lastPort: -1,
@@ -19,7 +27,7 @@ class BasicExecutionNodeComponent extends BaseNodeComponent {
         let nodeDesc = manager.getNodeDescriptor(this.props.position);
 
         let state = this.getNodeState();
-        let lastPort = (state.state.lastPort === -1) ? "N/A" : state.state.lastPort;
+        let lastPort = lastPortNames[state.state.lastPort];
 
         return <div className="nodeFrame basicExecNode">
             <div className="leftPanel">
