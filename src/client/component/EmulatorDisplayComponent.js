@@ -17,7 +17,7 @@ let nodeComponents = {
     stackMemory: StackMemoryNodeComponent,
     visual: VisualNodeComponent,
     numpad: NumpadNodeComponent,
-//    input: InputNodeComponent,
+    input: InputNodeComponent,
 //    output: OutputNodeComponent,
     beeper: BeeperNodeComponent
 };
@@ -25,8 +25,13 @@ let nodeComponents = {
 class NodeOptionBar extends AppComponent {
     render() {
         return <div className="controlBar">
-            X
+            <a onClick={this.removeNode.bind(this)}>x</a>
         </div>;
+    }
+
+    removeNode() {
+        this.app.modalStore.displayNodeDelDialog(this.props.node.position);
+        //this.app.managerStore.delNode(this.props.node.position);
     }
 }
 
@@ -38,7 +43,8 @@ class NodeDisplayComponent extends AppComponent {
         let component = nodeComponents[type];
         let element = React.createElement(component, node);
 
-        let optionBar = !this.app.manager.isMachineCreated() ? <NodeOptionBar/> : null;
+        let optionBar = !this.app.manager.isMachineCreated() ? 
+            <NodeOptionBar node={node}/> : null;
 
         return <div className="nodeContainer">
             {optionBar}
@@ -146,9 +152,16 @@ class EmulatorComponent extends AppComponent {
     render() {
         let [gridStruct, gridBounds] = this.makeGridStruct(this.app.manager.nodeMap);
 
-        return <NodeGridComponent gridStruct={gridStruct} bounds={gridBounds}/>;
+        if (_.size(this.app.manager.nodeMap) === 0) {
+            return <a onClick={this.addFirstNode.bind(this)}>Add Node</a>;
+        } else {
+            return <NodeGridComponent gridStruct={gridStruct} bounds={gridBounds}/>;
+        }
     }
 
+    addFirstNode() {
+        this.app.modalStore.displayNodeAddDialog([0, 0]);
+    }
 
     makeGridStruct(nodes) {
         // Rotates the dict by 90 degrees.

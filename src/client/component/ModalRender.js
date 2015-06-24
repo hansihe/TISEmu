@@ -1,6 +1,6 @@
 var React = require('react');
 var Marty = require('marty');
-var AppComponent = require('./AppBaseComponent');
+var AppComponent = require('./AppBase');
 
 
 var nodeTypes = require('../TISMachine').nodeTypes;
@@ -22,6 +22,25 @@ class NodeAddModal extends AppComponent {
     addModal(name) {
         let [pos] = this.props.args;
         this.app.managerStore.addNode(pos, name);
+        this.props.close();
+    }
+}
+
+class NodeDelModal extends AppComponent {
+    render() {
+        let [pos] = this.props.args;
+        return <div>
+            Are you sure you want to delete the node at {pos.toString()}?
+            You will lose unsaved code in the node.
+            <br/>
+            <a onClick={this.delNode.bind(this)}>Yes</a>
+            <br/>
+            <a onClick={this.props.close.bind(this)}>No</a>
+        </div>;
+    }
+    delNode() {
+        let [pos] = this.props.args;
+        this.app.managerStore.delNode(pos);
         this.props.close();
     }
 }
@@ -56,6 +75,7 @@ class ModalRenderComponent extends AppComponent {
         this.types = this.app.modalStore.modalTypes;
         this.typeComponents = {
             "nodeAddDialog": NodeAddModal,
+            "nodeDelDialog": NodeDelModal,
             "saveJson": SaveJsonModal,
             "loadJson": LoadJsonModal
         };

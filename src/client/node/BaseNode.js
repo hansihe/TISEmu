@@ -92,11 +92,11 @@ class BaseNode {
         }
     }
     write(side, value) {
-        this.outBuffer[side] = value;
+        this.outBuffer[side] = this.clamp(value);
     }
 
     getSideDisplayValue(side) {
-        if (this.out['a']) return this.out[a];
+        if (this.out['a']) return this.out['a'];
         return this.out[side];
     }
 

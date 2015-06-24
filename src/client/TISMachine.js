@@ -6,7 +6,7 @@ export let nodeTypes = {
     stackMemory: require('./node/StackMemoryNode'),
     visual: require('./node/VisualNode'),
     numpad: require('./node/NumpadNode'),
-    //input: require('./node/InputNode'),
+    input: require('./node/InputNode'),
     //output: require('./node/OutputNode'),
     beeper: require('./node/BeeperNode')
 };
@@ -165,7 +165,10 @@ class TISMachineManager {
     }
     delNode(position) {
         if (this.nodeMap[position[0]]) {
-            this.nodeMap[position[0]][position[1]] = undefined;
+            delete this.nodeMap[position[0]][position[1]];
+            if (_.size(this.nodeMap[position[0]]) === 0) {
+                delete this.nodeMap[position[0]];
+            }
         }
     }
 

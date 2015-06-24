@@ -1,11 +1,11 @@
-var BasicExecutionNode = require('./BasicExecutionNode');
+var BasicExecutionNode = require('./node/BasicExecutionNode');
 var TISMachineManager = require('./TISMachine').default;
 var nodeTypes = require('./TISMachine').nodeTypes;
 
 var React = require('react');
 var Marty = require('marty');
 Marty.HttpStateSource.removeHook('parseJSON');
-var AppComponent = require('./component/AppBaseComponent');
+var AppComponent = require('./component/AppBase');
 
 function updateBounds(bounds, value) {
     if (value < bounds[0]) {
@@ -190,6 +190,7 @@ class ModalStore extends Marty.Store {
         super(options);
         this.modalTypes = {
             nodeAddDialog: "nodeAddDialog",
+            nodeDelDialog: "nodeDelDialog",
             saveJson: "saveJson",
             loadJson: "loadJson"
         };
@@ -200,6 +201,9 @@ class ModalStore extends Marty.Store {
 
     displayNodeAddDialog(pos) {
         this.displayModal(this.modalTypes.nodeAddDialog, pos);
+    }
+    displayNodeDelDialog(pos) {
+        this.displayModal(this.modalTypes.nodeDelDialog, pos);
     }
 
     displaySaveJsonDialog() {

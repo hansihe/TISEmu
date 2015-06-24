@@ -5,7 +5,7 @@ var webpack = require('webpack');
 
 var config = {
     server: {
-        port: 8080,
+        port: 8181,
         staticLocation: wwwDest,
         defaultFile: 'index.html'
     },

@@ -7,15 +7,16 @@ class InputNodeComponent extends BaseNodeComponent {
     constructor(props, context) {
         super(props, context);
         this.nodeStateDefaults = {
-            currentValue: -1
+            currentValue: -1,
+            sourceMap: []
         };
     }
 
     render() {
-        console.log(this.props);
         let nodeDesc = this.getNodeDescriptor();
-        let text = nodeDesc.values.join('\n');
-        console.log(text);
+        let text = nodeDesc.values;
+        let state = this.getNodeState();
+            
         return <div className="nodeFrame inputNode">
             <div className="heading">
                 Input Node
@@ -26,15 +27,12 @@ class InputNodeComponent extends BaseNodeComponent {
                 editable={true}
                 text={text}
                 textChange={this.textChange.bind(this)}
-                highlightLine={this}/>
+                highlightLine={state.state.sourceMap[state.state.currentValue]}/>
         </div>;
     }
 
     textChange(text) {
-        this.getNodeDescriptor().values = _.filter(text.split('\n'), line => {
-            return !isNaN(+line);
-        });
-        this.forceUpdate();
+        this.getNodeDescriptor().values = text;
     }
 }
 
