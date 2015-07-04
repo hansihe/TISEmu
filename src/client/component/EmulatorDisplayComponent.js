@@ -12,7 +12,6 @@ var InputNodeComponent = require('./NodeInput');
 var BeeperNodeComponent = require('./NodeBeeper');
 
 let nodeComponents = {
-    blank: "div",
     basicExecution: BasicExecutionNodeComponent,
     stackMemory: StackMemoryNodeComponent,
     visual: VisualNodeComponent,
@@ -39,6 +38,10 @@ class NodeDisplayComponent extends AppComponent {
     render() {
         let node = this.props.node;
         let { type } = node;
+
+        if (type === "blank") {
+            return <div></div>;
+        }
 
         let component = nodeComponents[type];
         let element = React.createElement(component, node);
@@ -168,28 +171,28 @@ class EmulatorComponent extends AppComponent {
         // We do this because we want to render a html table, 
         // and they are row-major, while our format is column-major.
         let transposed = {};
-        _.each(nodes, (col, xPos) => {
-            _.each(col, (node, yPos) => {
-                if (!transposed[yPos]) {
-                    transposed[yPos] = {};
+        _.each(nodes, (col, yPos) => {
+            _.each(col, (node, xPos) => {
+                if (!transposed[xPos]) {
+                    transposed[xPos] = {};
                 }
-                transposed[yPos][xPos] = node;
+                transposed[xPos][yPos] = node;
             });
         });
 
         // Find the x bounds
-        let xValues = _.map(_.keys(nodes), i => +i);
+        let xValues = _.map(_.keys(transposed), i => +i);
         let xMin = _.min(xValues);
         let xMax = _.max(xValues);
 
         // .. and the y bounds
-        let yValues = _.map(_.keys(transposed), i => +i);
+        let yValues = _.map(_.keys(nodes), i => +i);
         let yMin = _.min(yValues);
         let yMax = _.max(yValues);
 
         // Fill in unfilled rows and cells, produce a complete grid
         let nodeGrid = _.zipObject(_.map(_.range(yMin, yMax + 1), yPos => {
-            let col = transposed[yPos];
+            let col = nodes[yPos];
             return [yPos, _.zipObject(_.map(_.range(xMin, xMax + 1), xPos => {
                 if (col === undefined || col[xPos] === undefined) {
                     return [xPos, {

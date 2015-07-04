@@ -26,43 +26,39 @@ class TISMachine {
             });
         });
 
+        // Sort the nodeMap both in the x and y axis. Flatten two dimensional array into a single list.
+        // This is the order iteration should happen in.
+        this.sortedNodes = _.flatten(
+                // Axis 1
+                _.map(_.sortBy(_.pairs(
+                            _.mapValues(this.nodeMap, val => {
+                                // Axis 2
+                                return _.map(_.sortBy(_.pairs(val), col => col[0]), col => col[1]);
+                            })
+                            ), row => row[0]), row => row[1])
+                );
+
         this.state = {
             cycle: 0,
             breakpoint: false
         };
+
+        console.log(this);
     }
 
     eachNode(func) {
-        _.each(this.nodeMap, yNodes => {
-            _.each(yNodes, node => {
-                func(node, node.position);
-            });
+        _.each(this.sortedNodes, node => {
+            func(node, node.position);
         });
-    }
-
-    stepPass(nodes, num) {
-        if (!nodes || nodes.length === 0) {
-            return [];
-        }
-
-        let responses = _.map(nodes, node => node.doStepPass());
-        let nextRoundNodes = _.unzip(_.filter(_.zip(responses, nodes), ([response]) => !response))[1];
-
-        if (nextRoundNodes && nextRoundNodes.length !== nodes.length) {
-            return this.stepPass(nextRoundNodes, num + 1);
-        } else {
-            return nextRoundNodes;
-        }
     }
 
     step() {
         this.state.breakpoint = false;
 
-        let nodes = [];
-        this.eachNode(node => nodes.push(node));
+        // After two passes all conflicts should be resolved.
+        this.eachNode(node => node.performStepPass());
+        this.eachNode(node => node.performStepPass());
 
-        // Iterate until all conflicts are resolved
-        this.stepPass(nodes, 0);
         this.eachNode(node => node.doStepEnd());
 
         this.state.cycle += 1;
@@ -73,9 +69,9 @@ class TISMachine {
     }
 
     getNodeInstance([xPos, yPos]) {
-        let yCol = this.nodeMap[xPos];
-        if (yCol) {
-            return yCol[yPos];
+        let xCol = this.nodeMap[yPos];
+        if (xCol) {
+            return xCol[xPos];
         }
     }
 
@@ -104,8 +100,8 @@ class TISMachineManager {
         this.nodeMap = {};
         _.each(nodes, nodeDescriptor => {
             let [xPos, yPos] = nodeDescriptor.position;
-            if (!this.nodeMap[xPos]) {
-                this.nodeMap[xPos] = {};
+            if (!this.nodeMap[yPos]) {
+                this.nodeMap[yPos] = {};
             }
 
             let nodeClass = nodeTypes[nodeDescriptor.type];
@@ -115,7 +111,7 @@ class TISMachineManager {
                 nodeDescriptor.temp = {};
             }
 
-            this.nodeMap[xPos][yPos] = nodeDescriptor;
+            this.nodeMap[yPos][xPos] = nodeDescriptor;
         });
     }
 
@@ -143,8 +139,8 @@ class TISMachineManager {
         }
         let nodeClass = nodeTypes[type];
 
-        if (!this.nodeMap[position[0]]) {
-            this.nodeMap[position[0]] = {};
+        if (!this.nodeMap[position[1]]) {
+            this.nodeMap[position[1]] = {};
         }
 
         let descriptor = {
@@ -161,21 +157,21 @@ class TISMachineManager {
         }
 
         console.log(descriptor);
-        this.nodeMap[position[0]][position[1]] = descriptor;
+        this.nodeMap[position[1]][position[0]] = descriptor;
     }
     delNode(position) {
-        if (this.nodeMap[position[0]]) {
-            delete this.nodeMap[position[0]][position[1]];
-            if (_.size(this.nodeMap[position[0]]) === 0) {
-                delete this.nodeMap[position[0]];
+        if (this.nodeMap[position[1]]) {
+            delete this.nodeMap[position[1]][position[0]];
+            if (_.size(this.nodeMap[position[1]]) === 0) {
+                delete this.nodeMap[position[1]];
             }
         }
     }
 
     getNodeDescriptor([xPos, yPos]) {
-        let yCol = this.nodeMap[xPos];
-        if (yCol) {
-            return yCol[yPos];
+        let xCol = this.nodeMap[yPos];
+        if (xCol) {
+            return xCol[xPos];
         }
     }
 

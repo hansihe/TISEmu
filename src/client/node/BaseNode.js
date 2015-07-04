@@ -9,6 +9,7 @@ class BaseNode {
         this.position = source.position;
 
         this.state = {};
+        this.passFinished = false;
 
         this.outBuffer = {};
         this.out = {};
@@ -126,10 +127,18 @@ class BaseNode {
             }
         }
     }
+
+    performStepPass() {
+        if (!this.passFinished && this.doStepPass()) {
+            this.passFinished = true;
+        }
+    }
+
     doStepEnd() {
         _.each(this.outBuffer, (value, side) => this.out[side] = value);
         this.outBuffer = {};
         this.stepEnd();
+        this.passFinished = false;
     }
 
     clamp(value) {
